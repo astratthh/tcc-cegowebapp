@@ -3,22 +3,22 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Cliente</title>
+    <title>Funcionário</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT" crossorigin="anonymous">
 </head>
 <body class="bg-secondary-subtle">
 <div th:insert="~{fragments/navbar :: navbar}"></div>
 <div class="container my-4">
-    <h1 class="text-center mb-3">Lista de Clientes</h1>
+    <h1 class="text-center mb-3">Lista de Funcionários</h1>
     <div class="d-flex justify-content-between">
-        <a class="btn btn-primary" th:href="@{/clientes/create}">
+        <a class="btn btn-primary" th:href="@{/funcionarios/create}">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                  class="bi bi-plus-square text-light" viewBox="0 0 16 16">
                 <path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2z"/>
                 <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
             </svg>
-            Novo Cliente
+            Novo Funcionário
         </a>
     </div>
     <div class="table-responsive w-100" style="padding-top: 2px">
@@ -31,31 +31,31 @@
                 <th>Email</th>
                 <th>Telefone</th>
                 <th>Endereço</th>
+                <th>Cargo</th>
+                <th>Salário</th>
                 <th>Ações</th>
             </tr>
             </thead>
             <tbody class="table-group-divider">
-            <tr th:each="cliente : ${clientesPage.content}">
-                <td th:text="${cliente.id}"></td>
-                <td th:text="${cliente.nome}"></td>
+            <tr th:each="funcionario : ${funcionariosPage.content}">
+                <td th:text="${funcionario.id}"></td>
+                <td th:text="${funcionario.nome}"></td>
 
                 <td>
-            <span th:if="${#strings.length(cliente.documento) == 11}">
+            <span th:if="${#strings.length(funcionario.documento) == 11}">
                 <!-- Formata CPF: 000.000.000-00 -->
-                [[${#strings.substring(cliente.documento,0,3)}]].[[${#strings.substring(cliente.documento,3,6)}]].[[${#strings.substring(cliente.documento,6,9)}]]-[[${#strings.substring(cliente.documento,9,11)}]]
-            </span>
-                    <span th:if="${#strings.length(cliente.documento) == 14}">
-                <!-- Formata CNPJ: 00.000.000/0000-00 -->
-                [[${#strings.substring(cliente.documento,0,2)}]].[[${#strings.substring(cliente.documento,2,5)}]].[[${#strings.substring(cliente.documento,5,8)}]]/[[${#strings.substring(cliente.documento,8,12)}]]-[[${#strings.substring(cliente.documento,12,14)}]]
+                [[${#strings.substring(funcionario.documento,0,3)}]].[[${#strings.substring(funcionario.documento,3,6)}]].[[${#strings.substring(funcionario.documento,6,9)}]]-[[${#strings.substring(funcionario.documento,9,11)}]]
             </span>
                 </td>
 
-                <td th:text="${cliente.email}"></td>
-                <td th:text="${cliente.telefone}"></td>
-                <td th:text="${cliente.endereco}"></td>
+                <td th:text="${funcionario.email}"></td>
+                <td th:text="${funcionario.telefone}"></td>
+                <td th:text="${funcionario.endereco}"></td>
+                <td th:text="${funcionario.cargo}"></td>
+                <td th:text="${funcionario.salario}"></td>
                 <td style="white-space: nowrap">
                     <a class="btn btn-warning btn-sm"
-                       th:href="@{/clientes/edit(id=${cliente.id})}" data-bs-toggle="tooltip" title="Editar">
+                       th:href="@{/funcionarios/edit(id=${funcionario.id})}" data-bs-toggle="tooltip" title="Editar">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                              class="bi bi-pencil-square text-light" viewBox="0 0 16 16">
                             <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
@@ -64,7 +64,7 @@
                         </svg>
                     </a>
                     <a class="btn btn-danger btn-sm btn-delete"
-                       th:href="@{/clientes/delete(id=${cliente.id})}"
+                       th:href="@{/funcionarios/delete(id=${funcionario.id})}"
                        data-bs-toggle="tooltip" title="Excluir">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                              class="bi bi-trash text-light" viewBox="0 0 16 16">
@@ -79,15 +79,15 @@
         <nav aria-label="Navegação de páginas">
             <ul class="pagination justify-content-center mt-3">
                 <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
-                    <a class="page-link" th:href="@{/clientes(page=${currentPage - 1},size=${clientesPage.size})}">Anterior</a>
+                    <a class="page-link" th:href="@{/funcionarios(page=${currentPage - 1},size=${funcionariosPage.size})}">Anterior</a>
                 </li>
                 <li class="page-item"
                     th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
                     th:classappend="${i == currentPage} ? 'active'">
-                    <a class="page-link" th:href="@{/clientes(page=${i},size=${clientesPage.size})}" th:text="${i + 1}">1</a>
+                    <a class="page-link" th:href="@{/funcionarios(page=${i},size=${funcionariosPage.size})}" th:text="${i + 1}">1</a>
                 </li>
                 <li class="page-item" th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'">
-                    <a class="page-link" th:href="@{/clientes(page=${currentPage + 1},size=${clientesPage.size})}">Próxima</a>
+                    <a class="page-link" th:href="@{/funcionarios(page=${currentPage + 1},size=${funcionariosPage.size})}">Próxima</a>
                 </li>
             </ul>
         </nav>

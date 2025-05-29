@@ -3,32 +3,109 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Cadastrar Cliente</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT" crossorigin="anonymous">
+  <title>Cliente</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet"
+        xintegrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT" crossorigin="anonymous">
   <style>
-    .error-message-container {
-      min-height: 24px;
-      line-height: 1;
+    /* Custom styling for form controls */
+    .form-control {
+      border-radius: 0.5rem; /* Mais cantos arredondados */
+      padding: 0.75rem 1rem; /* Um pouco mais de preenchimento para melhor espaçamento */
+      border: 1px solid #ced4da; /* Cor da borda padrão */
+      transition: all 0.3s ease-in-out; /* Transições suaves para efeitos de foco */
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Sombra sutil para profundidade */
     }
+
+    .form-control:focus {
+      border-color: #86b7fe; /* Cor da borda de foco padrão do Bootstrap */
+      box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); /* Sombra de foco mais proeminente */
+      outline: 0; /* Remove o contorno padrão */
+    }
+
+    .form-control.is-invalid {
+      border-color: #dc3545; /* Borda vermelha para campos inválidos */
+      padding-right: calc(1.5em + 0.75rem); /* Ajusta o preenchimento para o ícone de validação */
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e"); /* Ícone inválido */
+      background-repeat: no-repeat;
+      background-position: right calc(0.375em + 0.1875rem) center;
+      background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+    }
+
+    /* Error message styling */
+    .error-message-container {
+      height: 24px; /* Alterado de min-height para height fixo */
+      line-height: 1;
+      display: flex;
+      align-items: center; /* Centraliza verticalmente o conteúdo */
+      justify-content: flex-start; /* Alinha o texto à esquerda */
+    }
+
     .error-message {
       margin: 0;
       font-size: 0.875em;
+      line-height: 1.2; /* Garante line-height consistente */
+    }
+
+    /* Button styling (mantido do original, mas adicionando uma sombra sutil) */
+    .btn {
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      transition: all 0.2s ease-in-out;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    /* New styling for the wrapper div */
+    .form-wrapper {
+      background-color: #ffffff; /* Fundo branco para a área do formulário */
+      border-radius: 1rem; /* Cantos arredondados mais pronunciados para o wrapper */
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* Sombra mais forte para separação */
+      padding: 2rem; /* Preenchimento consistente dentro do wrapper */
+    }
+
+    /* Styling for the main title "NOVO CLIENTE" */
+    h2.main-title {
+      font-size: 2.5rem; /* Tamanho da fonte maior */
+      font-weight: 700; /* Negrito */
+      color: #343a40; /* Cor de texto mais escura */
+      padding-bottom: 0.75rem; /* Espaço abaixo do texto */
+      border-bottom: 2px solid #007bff; /* Linha azul de sublinhado */
+      margin-bottom: 2.5rem !important; /* Ajusta a margem inferior */
+      text-align: center; /* Centraliza o texto */
+    }
+
+    /* Body styling */
+    body {
+      background-color: #f8f9fa; /* Usando uma cor de fundo mais clara para o body */
+    }
+
+    /* Container styling to take remaining height and center content */
+    .container {
+      display: flex;
+      align-items: center; /* Centraliza o formulário verticalmente */
+      justify-content: center; /* Centraliza o formulário horizontalmente */
+      min-height: calc(100vh - 56px); /* Ocupa a altura restante da viewport, assumindo navbar de 56px */
+      overflow: hidden; /* Remove a barra de rolagem do container */
+      padding-top: 1rem; /* Adiciona um pouco de padding para espaçamento do topo */
+      padding-bottom: 1rem; /* Adiciona um pouco de padding para espaçamento da base */
     }
   </style>
 </head>
-<body>
-
-<div class="container my-4">
-  <div class="col-md-8 mx-auto rounded border p-4">
-    <h2 class="text-center mb-5">Novo Cliente</h2>
+<body class="bg-secondary-subtle">
+<div th:insert="~{fragments/navbar :: navbar}"></div>
+<div class="container">
+  <div class="form-wrapper col-md-8 mx-auto">
+    <h2 class="main-title mb-5">NOVO CLIENTE</h2>
     <form method="post" th:object="${clienteDTO}" th:action="@{/clientes/create}">
       <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
 
-      <!-- Nome -->
       <div class="row mb-3">
-        <label class="col-sm-4 col-form-label">Nome</label>
-        <div class="col-sm-8">
-          <input class="form-control" th:field="${clienteDTO.nome}" placeholder="Digite seu nome...">
+        <div class="col-12">
+          <label for="inputNome" class="form-label">Nome</label>
+          <input class="form-control" th:field="${clienteDTO.nome}" placeholder="Digite seu nome..."
+                 th:classappend="${#fields.hasErrors('nome')} ? 'is-invalid'" id="inputNome">
           <div class="error-message-container">
             <p th:if="${#fields.hasErrors('nome')}"
                class="text-danger error-message"
@@ -38,11 +115,24 @@
         </div>
       </div>
 
-      <!-- Email -->
       <div class="row mb-3">
-        <label class="col-sm-4 col-form-label">Email</label>
-        <div class="col-sm-8">
-          <input class="form-control" th:field="${clienteDTO.email}" placeholder="Digite seu email...">
+        <div class="col-md-6">
+          <label for="inputDocumento" class="form-label">Documento (CPF/CNPJ)</label>
+          <input class="form-control"
+                 th:field="${clienteDTO.documento}"
+                 placeholder="Digite CPF ou CNPJ..."
+                 th:classappend="${#fields.hasErrors('documento')} ? 'is-invalid'" id="inputDocumento">
+          <div class="error-message-container">
+            <p th:if="${#fields.hasErrors('documento')}"
+               class="text-danger error-message"
+               th:errors="${clienteDTO.documento}"></p>
+            <span th:unless="${#fields.hasErrors('documento')}" class="error-message">&nbsp;</span>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <label for="inputEmail" class="form-label">Email</label>
+          <input class="form-control" th:field="${clienteDTO.email}" placeholder="Digite seu email..."
+                 th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'" id="inputEmail">
           <div class="error-message-container">
             <p th:if="${#fields.hasErrors('email')}"
                class="text-danger error-message"
@@ -52,11 +142,11 @@
         </div>
       </div>
 
-      <!-- Endereço -->
       <div class="row mb-3">
-        <label class="col-sm-4 col-form-label">Endereço</label>
-        <div class="col-sm-8">
-          <input class="form-control" th:field="${clienteDTO.endereco}" placeholder="Digite seu endereço...">
+        <div class="col-12">
+          <label for="inputEndereco" class="form-label">Endereço</label>
+          <input class="form-control" th:field="${clienteDTO.endereco}" placeholder="Digite seu endereço..."
+                 th:classappend="${#fields.hasErrors('endereco')} ? 'is-invalid'" id="inputEndereco">
           <div class="error-message-container">
             <p th:if="${#fields.hasErrors('endereco')}"
                class="text-danger error-message"
@@ -66,11 +156,11 @@
         </div>
       </div>
 
-      <!-- Telefone -->
       <div class="row mb-3">
-        <label class="col-sm-4 col-form-label">Telefone</label>
-        <div class="col-sm-8">
-          <input class="form-control" th:field="${clienteDTO.telefone}" placeholder="Digite seu telefone...">
+        <div class="col-12">
+          <label for="inputTelefone" class="form-label">Telefone</label>
+          <input class="form-control" th:field="${clienteDTO.telefone}" placeholder="Digite seu telefone..."
+                 th:classappend="${#fields.hasErrors('telefone')} ? 'is-invalid'" id="inputTelefone">
           <div class="error-message-container">
             <p th:if="${#fields.hasErrors('telefone')}"
                class="text-danger error-message"
@@ -80,19 +170,20 @@
         </div>
       </div>
 
-      <!-- Botões -->
-      <div class="row mx-auto">
-        <div class="offset-sm-4 col-sm-4 d-grid">
+      <div class="row mx-auto mt-4">
+        <div class="col-sm-6 d-grid">
           <button type="submit" class="btn btn-primary">Criar</button>
         </div>
-        <div class="col-sm-4 d-grid">
+        <div class="col-sm-6 d-grid">
           <a class="btn btn-outline-primary" href="/clientes/">Cancelar</a>
         </div>
       </div>
     </form>
   </div>
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js" integrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"
+        xintegrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
 </body>
 </html>
