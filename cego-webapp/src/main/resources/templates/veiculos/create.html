@@ -3,9 +3,9 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Cliente</title>
+    <title>Novo Veículo</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet"
-          xintegrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT" crossorigin="anonymous">
+          integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT" crossorigin="anonymous">
     <style>
         /* Custom styling for form controls */
         .form-control {
@@ -65,7 +65,7 @@
             padding: 2rem; /* Preenchimento consistente dentro do wrapper */
         }
 
-        /* Styling for the main title "Editar Cliente" */
+        /* Styling for the main title "NOVO VEÍCULO" */
         h2.main-title {
             font-size: 2.5rem; /* Tamanho da fonte maior */
             font-weight: 700; /* Negrito */
@@ -97,97 +97,94 @@
 <div th:insert="~{fragments/navbar :: navbar}"></div>
 <div class="container">
     <div class="form-wrapper col-md-8 mx-auto">
-        <h2 class="main-title mb-5">EDITAR CLIENTE</h2>
-        <form method="post" th:object="${clienteDTO}" th:action="@{/clientes/edit}">
+        <h2 class="main-title mb-5">NOVO VEÍCULO</h2>
+        <form method="post" th:object="${veiculoDTO}" th:action="@{/veiculos/create}">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-            <input type="hidden" name="id" th:value="${cliente.id}"/>
 
             <div class="row mb-3">
                 <div class="col-12">
-                    <label for="inputNome" class="form-label">Nome</label>
-                    <input class="form-control" th:field="${clienteDTO.nome}" placeholder="Digite seu nome..."
-                           th:classappend="${#fields.hasErrors('nome')} ? 'is-invalid'" id="inputNome">
+                    <label for="inputPlaca" class="form-label">Placa</label>
+                    <input class="form-control" th:field="${veiculoDTO.placa}" placeholder="Digite a placa..."
+                           th:classappend="${#fields.hasErrors('placa')} ? 'is-invalid'" id="inputPlaca">
                     <div class="error-message-container">
-                        <p th:if="${#fields.hasErrors('nome')}"
+                        <p th:if="${#fields.hasErrors('placa')}"
                            class="text-danger error-message"
-                           th:errors="${clienteDTO.nome}"></p>
-                        <span th:unless="${#fields.hasErrors('nome')}" class="error-message">&nbsp;</span>
+                           th:errors="${veiculoDTO.placa}"></p>
+                        <span th:unless="${#fields.hasErrors('placa')}" class="error-message">&nbsp;</span>
                     </div>
                 </div>
             </div>
 
             <div class="row mb-3">
                 <div class="col-md-6">
-                    <label for="inputDocumento" class="form-label">Documento (CPF/CNPJ)</label>
-                    <input class="form-control"
-                           th:field="*{documento}"
-                           placeholder="Digite CPF ou CNPJ..."
-                           th:classappend="${#fields.hasErrors('documento')} ? 'is-invalid'" id="inputDocumento">
+                    <label for="inputMarca" class="form-label">Marca</label>
+                    <input class="form-control" th:field="${veiculoDTO.marca}" placeholder="Digite a marca..."
+                           th:classappend="${#fields.hasErrors('marca')} ? 'is-invalid'" id="inputMarca">
                     <div class="error-message-container">
-                        <p th:if="${#fields.hasErrors('documento')}"
+                        <p th:if="${#fields.hasErrors('marca')}"
                            class="text-danger error-message"
-                           th:errors="${clienteDTO.documento}"></p>
-                        <span th:unless="${#fields.hasErrors('documento')}" class="error-message">&nbsp;</span>
+                           th:errors="${veiculoDTO.marca}"></p>
+                        <span th:unless="${#fields.hasErrors('marca')}" class="error-message">&nbsp;</span>
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <label for="inputEmail" class="form-label">Email</label>
-                    <input class="form-control" th:field="${clienteDTO.email}" placeholder="Digite seu email..."
-                           th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'" id="inputEmail">
+                    <label for="inputModelo" class="form-label">Modelo</label>
+                    <input class="form-control" th:field="${veiculoDTO.modelo}" placeholder="Digite o modelo..."
+                           th:classappend="${#fields.hasErrors('modelo')} ? 'is-invalid'" id="inputModelo">
                     <div class="error-message-container">
-                        <p th:if="${#fields.hasErrors('email')}"
+                        <p th:if="${#fields.hasErrors('modelo')}"
                            class="text-danger error-message"
-                           th:errors="${clienteDTO.email}"></p>
-                        <span th:unless="${#fields.hasErrors('email')}" class="error-message">&nbsp;</span>
+                           th:errors="${veiculoDTO.modelo}"></p>
+                        <span th:unless="${#fields.hasErrors('modelo')}" class="error-message">&nbsp;</span>
                     </div>
                 </div>
             </div>
 
             <div class="row mb-3">
-                <div class="col-12">
-                    <label for="inputEndereco" class="form-label">Endereço</label>
-                    <input class="form-control" th:field="${clienteDTO.endereco}" placeholder="Digite seu endereço..."
-                           th:classappend="${#fields.hasErrors('endereco')} ? 'is-invalid'" id="inputEndereco">
+                <div class="col-md-6">
+                    <label for="inputAno" class="form-label">Ano</label>
+                    <input type="number" class="form-control" th:field="${veiculoDTO.ano}" placeholder="Digite o ano..."
+                           th:classappend="${#fields.hasErrors('ano')} ? 'is-invalid'" id="inputAno">
                     <div class="error-message-container">
-                        <p th:if="${#fields.hasErrors('endereco')}"
+                        <p th:if="${#fields.hasErrors('ano')}"
                            class="text-danger error-message"
-                           th:errors="${clienteDTO.endereco}"></p>
-                        <span th:unless="${#fields.hasErrors('endereco')}" class="error-message">&nbsp;</span>
+                           th:errors="${veiculoDTO.ano}"></p>
+                        <span th:unless="${#fields.hasErrors('ano')}" class="error-message">&nbsp;</span>
                     </div>
                 </div>
-            </div>
-
-            <div class="row mb-3">
-                <div class="col-12">
-                    <label for="inputTelefone" class="form-label">Telefone</label>
-                    <input class="form-control" th:field="${clienteDTO.telefone}" placeholder="Digite seu telefone..."
-                           th:classappend="${#fields.hasErrors('telefone')} ? 'is-invalid'" id="inputTelefone">
+                <div class="col-md-6">
+                    <label for="selectCliente" class="form-label">Cliente</label>
+                    <select class="form-select" id="selectCliente" th:field="*{clienteId}"
+                            th:classappend="${#fields.hasErrors('clienteId')} ? 'is-invalid'">
+                        <option value="">Selecione um cliente</option>
+                        <option th:each="cliente : ${clientes}"
+                                th:value="${cliente.id}"
+                                th:text="${cliente.nome}">
+                        </option>
+                    </select>
                     <div class="error-message-container">
-                        <p th:if="${#fields.hasErrors('telefone')}"
+                        <p th:if="${#fields.hasErrors('clienteId')}"
                            class="text-danger error-message"
-                           th:errors="${clienteDTO.telefone}"></p>
-                        <span th:unless="${#fields.hasErrors('telefone')}" class="error-message">&nbsp;</span>
+                           th:errors="${veiculoDTO.clienteId}"></p>
+                        <span th:unless="${#fields.hasErrors('clienteId')}" class="error-message">&nbsp;</span>
                     </div>
                 </div>
             </div>
 
             <div class="row mx-auto mt-4">
                 <div class="col-sm-6 d-grid">
-                    <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                    <button type="submit" class="btn btn-primary">Criar</button>
                 </div>
                 <div class="col-sm-6 d-grid">
-                    <a class="btn btn-outline-primary" href="/clientes/">Cancelar</a>
+                    <a class="btn btn-outline-primary" href="/veiculos/">Cancelar</a>
                 </div>
             </div>
         </form>
     </div>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"
-        xintegrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO"
-        crossorigin="anonymous"></script>
+        integrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO" crossorigin="anonymous"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
 </body>
 </html>
-
