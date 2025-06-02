@@ -97,7 +97,7 @@
 <div th:insert="~{fragments/navbar :: navbar}"></div>
 <div class="container">
     <div class="form-wrapper col-md-8 mx-auto">
-        <h2 class="main-title mb-5">EDITAR <FUNCIONÁRIO></FUNCIONÁRIO></h2>
+        <h2 class="main-title mb-5">EDITAR FUNCIONÁRIO</h2>
         <form method="post" th:object="${funcionarioDTO}" th:action="@{/funcionarios/edit}">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
             <input type="hidden" name="id" th:value="${funcionario.id}"/>
@@ -187,7 +187,7 @@
                 </div>
                 <div class="col-md-6">
                     <label for="inputSalario" class="form-label">Salário</label>
-                    <input class="form-control" th:field="${funcionarioDTO.salario}" placeholder="Ex: 2000.00"
+                    <input type="number" class="form-control" th:field="${funcionarioDTO.salario}" placeholder="Ex: 2000.00"
                            th:classappend="${#fields.hasErrors('salario')} ? 'is-invalid'" id="inputSalario">
                     <div class="error-message-container">
                         <p th:if="${#fields.hasErrors('salario')}"
@@ -216,30 +216,10 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
 <script>
-    // Máscara dinâmica para CPF/CNPJ
-    $(document).ready(function() {
-        function applyDocumentoMask(valor) {
-            if (valor.length <= 11) {
-                $('#inputDocumento').mask('000.000.000-00');
-            } else {
-                $('#inputDocumento').mask('00.000.000/0000-00');
-            }
-        }
-
-        // Aplica máscara inicial se houver valor no carregamento da página
-        const initialDocumentoValue = $('#inputDocumento').val();
-        if (initialDocumentoValue) {
-            applyDocumentoMask(initialDocumentoValue);
-        }
-
-        // Aplica máscara dinâmica ao digitar
-        $('#inputDocumento').on('keyup', function () {
-            let valor = $(this).val().replace(/\D/g, '');
-            applyDocumentoMask(valor);
+    $(document).ready(function () {
+        $('#inputDocumento').on('paste', function(e) {
+            e.preventDefault(); // Impede a ação padrão de colar
         });
-
-        // Máscara para Telefone
-        $('#inputTelefone').mask('(00) 00000-0000');
     });
 </script>
 </body>
