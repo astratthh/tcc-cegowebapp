@@ -229,18 +229,6 @@ public class VeiculoController {
         return "veiculos/index";
     }
 
-    @GetMapping("/cliente/{clienteId}")
-    public String getVeiculosByCliente(@PathVariable Integer clienteId, Model model) {
-        Cliente cliente = clienteRepository.findById(clienteId).orElse(null);
-        if (cliente == null) {
-            return "redirect:/clientes";
-        }
-        List<Veiculo> veiculos = veiculoRepository.findByClienteId(clienteId);
-        model.addAttribute("cliente", cliente);
-        model.addAttribute("veiculos", veiculos);
-        return "veiculos/listaPorCliente";
-    }
-
     @GetMapping("/create")
     public String createVeiculo(Model model) {
         VeiculoDTO veiculoDTO = new VeiculoDTO();
@@ -253,7 +241,6 @@ public class VeiculoController {
     @PostMapping("/create")
     public String createVeiculo(@Valid @ModelAttribute VeiculoDTO veiculoDTO, BindingResult bindingResult, Model model) {
 
-        // Se já houver erros de validação (ex: @NotBlank), não prossegue com as validações customizadas
         if (!bindingResult.hasErrors()) {
             String placaLimpa = veiculoDTO.getPlaca() != null ? veiculoDTO.getPlaca().replaceAll("-", "").toUpperCase() : "";
 
@@ -271,7 +258,6 @@ public class VeiculoController {
                 ));
             }
         }
-
 
         if (bindingResult.hasErrors()) {
             List<Cliente> clientes = clienteRepository.findAll();

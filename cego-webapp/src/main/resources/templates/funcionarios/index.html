@@ -52,7 +52,7 @@
                 <td th:text="${funcionario.telefone}"></td>
                 <td th:text="${funcionario.endereco}"></td>
                 <td th:text="${funcionario.cargo}"></td>
-                <td th:text="${funcionario.salario}"></td>
+                <td th:text="${#numbers.formatCurrency(funcionario.salario)}"></td>
                 <td style="white-space: nowrap">
                     <a class="btn btn-warning btn-sm"
                        th:href="@{/funcionarios/edit(id=${funcionario.id})}" data-bs-toggle="tooltip" title="Editar">

@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Serviço</title> <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet"
+                                 xintegrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT" crossorigin="anonymous">
+    <style>
+        /* Custom styling for form controls */
+        .form-control {
+            border-radius: 0.5rem; /* Mais cantos arredondados */
+            padding: 0.75rem 1rem; /* Um pouco mais de preenchimento para melhor espaçamento */
+            border: 1px solid #ced4da; /* Cor da borda padrão */
+            transition: all 0.3s ease-in-out; /* Transições suaves para efeitos de foco */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Sombra sutil para profundidade */
+        }
+
+        .form-control:focus {
+            border-color: #86b7fe; /* Cor da borda de foco padrão do Bootstrap */
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); /* Sombra de foco mais proeminente */
+            outline: 0; /* Remove o contorno padrão */
+        }
+
+        .form-control.is-invalid {
+            border-color: #dc3545; /* Borda vermelha para campos inválidos */
+            padding-right: calc(1.5em + 0.75rem); /* Ajusta o preenchimento para o ícone de validação */
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e"); /* Ícone inválido */
+            background-repeat: no-repeat;
+            background-position: right calc(0.375em + 0.1875rem) center;
+            background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+        }
+
+        /* Error message styling */
+        .error-message-container {
+            height: 24px; /* Alterado de min-height para height fixo */
+            line-height: 1;
+            display: flex;
+            align-items: center; /* Centraliza verticalmente o conteúdo */
+            justify-content: flex-start; /* Alinha o texto à esquerda */
+        }
+
+        .error-message {
+            margin: 0;
+            font-size: 0.875em;
+            line-height: 1.2; /* Garante line-height consistente */
+        }
+
+        /* Button styling (mantido do original, mas adicionando uma sombra sutil) */
+        .btn {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease-in-out;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        /* New styling for the wrapper div */
+        .form-wrapper {
+            background-color: #ffffff; /* Fundo branco para a área do formulário */
+            border-radius: 1rem; /* Cantos arredondados mais pronunciados para o wrapper */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* Sombra mais forte para separação */
+            padding: 2rem; /* Preenchimento consistente dentro do wrapper */
+        }
+
+        /* Styling for the main title "NOVO SERVIÇO" */
+        h2.main-title {
+            font-size: 2.5rem; /* Tamanho da fonte maior */
+            font-weight: 700; /* Negrito */
+            color: #343a40; /* Cor de texto mais escura */
+            padding-bottom: 0.75rem; /* Espaço abaixo do texto */
+            border-bottom: 2px solid #007bff; /* Linha azul de sublinhado */
+            margin-bottom: 2.5rem !important; /* Ajusta a margem inferior */
+            text-align: center; /* Centraliza o texto */
+        }
+
+        /* Body styling */
+        body {
+            background-color: #f8f9fa; /* Usando uma cor de fundo mais clara para o body */
+        }
+
+        /* Container styling to take remaining height and center content */
+        .container {
+            display: flex;
+            align-items: center; /* Centraliza o formulário verticalmente */
+            justify-content: center; /* Centraliza o formulário horizontalmente */
+            min-height: calc(100vh - 56px); /* Ocupa a altura restante da viewport, assumindo navbar de 56px */
+            overflow: hidden; /* Remove a barra de rolagem do container */
+            padding-top: 1rem; /* Adiciona um pouco de padding para espaçamento do topo */
+            padding-bottom: 1rem; /* Adiciona um pouco de padding para espaçamento da base */
+        }
+    </style>
+</head>
+<body class="bg-secondary-subtle">
+<div th:insert="~{fragments/navbar :: navbar}"></div>
+<div class="container">
+    <div class="form-wrapper col-md-8 mx-auto">
+        <h2 class="main-title mb-5">NOVO SERVIÇO</h2> <form method="post" th:object="${servicoDTO}" th:action="@{/servicos/create}"> <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+        <div class="row mb-3">
+            <div class="col-12">
+                <label for="inputNome" class="form-label">Nome</label>
+                <input class="form-control" th:field="${servicoDTO.nome}" placeholder="Nome do serviço..." th:classappend="${#fields.hasErrors('nome')} ? 'is-invalid'" id="inputNome">
+                <div class="error-message-container">
+                    <p th:if="${#fields.hasErrors('nome')}"
+                       class="text-danger error-message"
+                       th:errors="${servicoDTO.nome}"></p> <span th:unless="${#fields.hasErrors('nome')}" class="error-message">&nbsp;</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-12">
+                <label for="inputDescricao" class="form-label">Descrição</label>
+                <textarea class="form-control" th:field="${servicoDTO.descricao}" placeholder="Descrição do serviço..." maxlength="255" th:classappend="${#fields.hasErrors('descricao')} ? 'is-invalid'" id="inputDescricao" rows="3"></textarea>
+                <div class="error-message-container">
+                    <p th:if="${#fields.hasErrors('descricao')}"
+                       class="text-danger error-message"
+                       th:errors="${servicoDTO.descricao}"></p> <span th:unless="${#fields.hasErrors('descricao')}" class="error-message">&nbsp;</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-12"> <label for="inputPreco" class="form-label">Preço</label>
+                <input type="number" step="0.01" class="form-control" th:field="${servicoDTO.preco}" placeholder="Ex: 99.99" th:classappend="${#fields.hasErrors('preco')} ? 'is-invalid'" id="inputPreco">
+                <div class="error-message-container">
+                    <p th:if="${#fields.hasErrors('preco')}"
+                       class="text-danger error-message"
+                       th:errors="${servicoDTO.preco}"></p> <span th:unless="${#fields.hasErrors('preco')}" class="error-message">&nbsp;</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mx-auto mt-4">
+            <div class="col-sm-6 d-grid">
+                <button type="submit" class="btn btn-primary">Criar</button>
+            </div>
+            <div class="col-sm-6 d-grid">
+                <a class="btn btn-outline-primary" href="/servicos/">Cancelar</a> </div>
+        </div>
+    </form>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"
+        xintegrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</body>
+</html>
