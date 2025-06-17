@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.List;
 
 @Entity
 @Data
@@ -42,4 +43,5 @@ public class Fornecedor implements Serializable {
     @NotEmpty(message = "Email é obrigatório")
     @Email
     private String email;
+
 }

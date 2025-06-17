@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -55,4 +56,5 @@ public class Funcionario implements Serializable {
     @NotNull(message = "Salário é obrigatório")
     @DecimalMin(value = "0.01", message = "Salário deve ser maior que zero")
     private BigDecimal salario;
+
 }

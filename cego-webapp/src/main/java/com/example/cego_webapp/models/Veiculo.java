@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.List;
 
 @Entity
 @Data
@@ -43,4 +44,5 @@ public class Veiculo implements Serializable {
     @ManyToOne
     @JoinColumn(name = "cliente_id", nullable = false) // Coluna da chave estrangeira no banco de dados
     private Cliente cliente;
+
 }
