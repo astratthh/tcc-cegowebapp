@@ -24,7 +24,7 @@ public class ServicoController {
     @GetMapping({"", "/"})
     public String getServicos(Model model,
                               @RequestParam(defaultValue = "0") int page,
-                              @RequestParam(defaultValue = "13") int size) {
+                              @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
         Page<Servico> servicosPage = servicoRepository.findAll(pageable);
 

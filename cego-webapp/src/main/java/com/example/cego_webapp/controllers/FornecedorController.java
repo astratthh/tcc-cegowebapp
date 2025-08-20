@@ -24,7 +24,7 @@ public class FornecedorController {
     @GetMapping({"", "/"})
     public String getFornecedores(Model model,
                                   @RequestParam(defaultValue = "0") int page,
-                                  @RequestParam(defaultValue = "13") int size) {
+                                  @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
         Page<Fornecedor> fornecedoresPage = fornecedorRepository.findAll(pageable);
 

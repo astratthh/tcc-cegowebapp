@@ -3,105 +3,229 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Home - Cego</title>
+    <title>Dashboard | Meu App</title>
 
-    <link rel="canonical" href="https://getbootstrap.com/docs/5.0/examples/sidebars/">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet"
-          integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT" crossorigin="anonymous">
-    <link rel="stylesheet" href="sidebar.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
     <style>
-        .bd-placeholder-img {
-            font-size: 1.125rem;
-            text-anchor: middle;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            user-select: none;
+        /* PALETA 3: Elegante e Focado (Grafite com Laranja) */
+        :root {
+            --c-primary: #F97316;
+            --c-text-main: #111827;
+            --c-text-muted: #4B5563;
+            --c-border: #D1D5DB;
+            --c-card-bg: #FFFFFF;
+            --c-body-bg: #F3F4F6;
+
+            /* Mapeamento para as variáveis do Bootstrap */
+            --bs-primary-rgb: 249, 115, 22;      /* Convertido de #F97316 */
+            --bs-body-bg: var(--c-body-bg);
+            --bs-body-color: var(--c-text-main);
+            --border-color: var(--c-border);
         }
 
-        @media (min-width: 768px) {
-            .bd-placeholder-img-lg {
-                font-size: 3.5rem;
-            }
+        /* ESTILOS GERAIS E LAYOUT */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bs-body-bg);
+        }
+        .main-layout { display: flex; min-height: 100vh; }
+        .content-wrapper { flex-grow: 1; padding: 2rem; overflow-y: auto; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
+
+        /* ESTILO DOS CARDS E LISTAS COM A NOVA PALETA */
+        .kpi-link-card {
+            display: block;
+            text-decoration: none;
+            color: var(--bs-body-color);
+            background-color: var(--c-card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+        }
+        .kpi-link-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.07);
+            border-color: var(--c-primary);
+        }
+        .kpi-link-card .kpi-icon {
+            font-size: 1.5rem;
+            color: var(--c-primary);
+        }
+        .kpi-link-card .kpi-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--c-text-muted);
+        }
+        .kpi-link-card .kpi-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--c-text-main);
+        }
+
+        .list-card {
+            background-color: var(--c-card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+        }
+        .list-group-item {
+            background-color: transparent;
+            border-bottom: 1px solid var(--border-color) !important;
+        }
+        .list-group-item:last-child {
+            border-bottom: 0 !important;
+        }
+        .text-muted {
+            color: var(--c-text-muted) !important;
+        }
+
+        /* Badge para status usando a cor primária */
+        .status-badge {
+            background-color: rgba(var(--bs-primary-rgb), 0.1);
+            color: var(--c-primary);
+        }
+
+        /* Ajuste na sidebar para harmonizar com a paleta */
+        aside.bg-dark {
+            background-color: var(--c-text-main) !important; /* Cor grafite escura */
+        }
+
+        /* Botão Primário (Laranja) */
+        .btn-primary {
+            --bs-btn-color: #fff;
+            --bs-btn-bg: var(--c-primary);
+            --bs-btn-border-color: var(--c-primary);
+            --bs-btn-hover-color: #fff;
+            --bs-btn-hover-bg: #c2410c; /* Tom de laranja mais escuro para hover */
+            --bs-btn-hover-border-color: #c2410c;
         }
     </style>
 </head>
-<body class="bg-secondary-subtle">
-    <nav class="navbar navbar-expand-lg bg-black">
-        <div class="container-fluid">
-            <a class="navbar-brand text-light" href="#">Bem-Vindo!</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNavDropdown">
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link active text-light" aria-current="page" th:href="@{/}">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" fill="currentColor" class="bi bi-houses text-light" viewBox="0 0 16 16">
-                                <path d="M5.793 1a1 1 0 0 1 1.414 0l.647.646a.5.5 0 1 1-.708.708L6.5 1.707 2 6.207V12.5a.5.5 0 0 0 .5.5.5.5 0 0 1 0 1A1.5 1.5 0 0 1 1 12.5V7.207l-.146.147a.5.5 0 0 1-.708-.708zm3 1a1 1 0 0 1 1.414 0L12 3.793V2.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v3.293l1.854 1.853a.5.5 0 0 1-.708.708L15 8.207V13.5a1.5 1.5 0 0 1-1.5 1.5h-8A1.5 1.5 0 0 1 4 13.5V8.207l-.146.147a.5.5 0 1 1-.708-.708zm.707.707L5 7.207V13.5a.5.5 0 0 0 .5.5h8a.5.5 0 0 0 .5-.5V7.207z"/>
-                            </svg>
-                            Home
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-light" th:href="@{/clientes}">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-person text-light" viewBox="0 0 16 16">
-                                <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4m-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10s-3.516.68-4.168 1.332c-.678.678-.83 1.418-.832 1.664z"/>
-                            </svg>
-                            Clientes
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-light" th:href="@{/funcionarios}">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-person text-light" viewBox="0 0 16 16">
-                                <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4m-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10s-3.516.68-4.168 1.332c-.678.678-.83 1.418-.832 1.664z"/>
-                            </svg>
-                            Funcionários
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-light" th:href="@{/fornecedores}">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-box-seam" viewBox="0 0 16 16">
-                                <path d="M8.186 1.113a.5.5 0 0 0-.372 0L1.846 3.5l2.404.961L10.404 2zm3.564 1.426L5.596 5 8 5.961 14.154 3.5zm3.25 1.7-6.5 2.6v7.922l6.5-2.6V4.24zM7.5 14.762V6.838L1 4.239v7.923zM7.443.184a1.5 1.5 0 0 1 1.114 0l7.129 2.852A.5.5 0 0 1 16 3.5v8.662a1 1 0 0 1-.629.928l-7.185 2.874a.5.5 0 0 1-.372 0L.63 13.09a1 1 0 0 1-.63-.928V3.5a.5.5 0 0 1 .314-.464z"/>
-                            </svg>
-                            Fornecedores
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-light" th:href="@{/veiculos}">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-person text-light" viewBox="0 0 16 16">
-                                <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4m-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10s-3.516.68-4.168 1.332c-.678.678-.83 1.418-.832 1.664z"/>
-                            </svg>
-                            Veículos
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-light" th:href="@{/produtos}">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-laptop" viewBox="0 0 16 16">
-                                <path d="M13.5 3a.5.5 0 0 1 .5.5V11H2V3.5a.5.5 0 0 1 .5-.5zm-11-1A1.5 1.5 0 0 0 1 3.5V12h14V3.5A1.5 1.5 0 0 0 13.5 2zM0 12.5h16a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 12.5"/>
-                            </svg>
-                            Produtos
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-light" th:href="@{/servicos}">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-envelope-paper" viewBox="0 0 16 16">
-                                <path d="M4 0a2 2 0 0 0-2 2v1.133l-.941.502A2 2 0 0 0 0 5.4V14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V5.4a2 2 0 0 0-1.059-1.765L14 3.133V2a2 2 0 0 0-2-2zm10 4.267.47.25A1 1 0 0 1 15 5.4v.817l-1 .6zm-1 3.15-3.75 2.25L8 8.917l-1.25.75L3 7.417V2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1zm-11-.6-1-.6V5.4a1 1 0 0 1 .53-.882L2 4.267zm13 .566v5.734l-4.778-2.867zm-.035 6.88A1 1 0 0 1 14 15H2a1 1 0 0 1-.965-.738L8 10.083zM1 13.116V7.383l4.778 2.867L1 13.117Z"/>
-                            </svg>
-                            Serviços
-                        </a>
-                    </li>
-                </ul>
+<body>
+
+<div class="main-layout">
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <div class="content-wrapper">
+        <main>
+            <header class="d-flex justify-content-between align-items-center mb-5 fade-in">
+                <div>
+                    <h1 class="h3 fw-bold mb-1">Bem-vindo de volta!</h1>
+                    <p class="text-muted mb-0">Confira o que há de novo no seu sistema.</p>
+                </div>
+                <form th:action="@{/logout}" method="post">
+                    <button type="submit" class="btn btn-primary d-flex align-items-center gap-2">
+                        <i class="bi bi-box-arrow-right"></i>
+                        Sair
+                    </button>
+                </form>
+            </header>
+
+            <div class="row">
+                <div class="col-lg-3 col-md-6 mb-4 fade-in" style="animation-delay: 0.1s;">
+                    <a th:href="@{/clientes}" class="kpi-link-card">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="kpi-title">Clientes</span>
+                            <i class="bi bi-people-fill kpi-icon"></i>
+                        </div>
+                        <div class="kpi-value" th:text="${totalClientes ?: 0}">0</div>
+                        <p class="text-muted small mb-0">Total de clientes ativos</p>
+                    </a>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4 fade-in" style="animation-delay: 0.2s;">
+                    <a th:href="@{/produtos}" class="kpi-link-card">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="kpi-title">Produtos</span>
+                            <i class="bi bi-box-seam-fill kpi-icon"></i>
+                        </div>
+                        <div class="kpi-value" th:text="${totalProdutos ?: 0}">0</div>
+                        <p class="text-muted small mb-0">Itens cadastrados</p>
+                    </a>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4 fade-in" style="animation-delay: 0.3s;">
+                    <a th:href="@{/funcionarios}" class="kpi-link-card">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="kpi-title">Funcionários</span>
+                            <i class="bi bi-person-badge-fill kpi-icon"></i>
+                        </div>
+                        <div class="kpi-value" th:text="${totalFuncionarios ?: '0'}">0</div>
+                        <p class="text-muted small mb-0">Membros da equipe</p>
+                    </a>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4 fade-in" style="animation-delay: 0.4s;">
+                    <a th:href="@{/servicos}" class="kpi-link-card">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="kpi-title">Serviços</span>
+                            <i class="bi bi-tools kpi-icon"></i>
+                        </div>
+                        <div class="kpi-value" th:text="${totalServicos ?: '0'}">0</div>
+                        <p class="text-muted small mb-0">Registrados no sistema</p>
+                    </a>
+                </div>
             </div>
-            <a href="#" class="btn btn-danger">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-box-arrow-left" viewBox="0 0 16 16">
-                    <path fill-rule="evenodd" d="M6 12.5a.5.5 0 0 0 .5.5h8a.5.5 0 0 0 .5-.5v-9a.5.5 0 0 0-.5-.5h-8a.5.5 0 0 0-.5.5v2a.5.5 0 0 1-1 0v-2A1.5 1.5 0 0 1 6.5 2h8A1.5 1.5 0 0 1 16 3.5v9a1.5 1.5 0 0 1-1.5 1.5h-8A1.5 1.5 0 0 1 5 12.5v-2a.5.5 0 0 1 1 0z"/>
-                    <path fill-rule="evenodd" d="M.146 8.354a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L1.707 7.5H10.5a.5.5 0 0 1 0 1H1.707l2.147 2.146a.5.5 0 0 1-.708.708z"/>
-                </svg>
-            </a>
-        </div>
-    </nav>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO"
-        crossorigin="anonymous"></script>
+
+            <div class="row">
+                <div class="col-md-6 mb-4 fade-in" style="animation-delay: 0.5s;">
+                    <div class="card list-card h-100">
+                        <div class="card-header bg-white border-0 py-3">
+                            <h5 class="fw-bold m-0">Últimos Clientes Adicionados</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div th:if="${#lists.isEmpty(ultimosClientes)}" class="text-center p-5">
+                                <p class="text-muted">Nenhum cliente cadastrado recentemente.</p>
+                            </div>
+                            <ul class="list-group list-group-flush" th:unless="${#lists.isEmpty(ultimosClientes)}">
+                                <li class="list-group-item d-flex justify-content-between align-items-center p-3"
+                                    th:each="cliente : ${ultimosClientes}">
+                                    <div>
+                                        <div class="fw-semibold" th:text="${cliente.nome}">Nome do Cliente</div>
+                                        <div class="small text-muted" th:text="${cliente.email}">cliente@email.com</div>
+                                    </div>
+                                    <a th:href="@{/clientes/edit(id=${cliente.id})}" class="btn btn-sm btn-light border">Ver</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-4 fade-in" style="animation-delay: 0.6s;">
+                    <div class="card list-card h-100">
+                        <div class="card-header bg-white border-0 py-3">
+                            <h5 class="fw-bold m-0">Últimos Serviços Registrados</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div th:if="${#lists.isEmpty(ultimosServicos)}" class="text-center p-5">
+                                <p class="text-muted">Nenhum serviço registrado recentemente.</p>
+                            </div>
+                            <ul class="list-group list-group-flush" th:unless="${#lists.isEmpty(ultimosServicos)}">
+                                <li class="list-group-item d-flex justify-content-between align-items-center p-3"
+                                    th:each="servico : ${ultimosServicos}">
+                                    <div>
+                                        <div class="fw-semibold" th:text="${servico.nome}">Nome do Serviço</div>
+                                        <div class="small text-muted" th:text="|Valor: R$ ${servico.valor}|">Valor: R$ 0,00</div>
+                                    </div>
+                                    <span class="badge rounded-pill fw-semibold status-badge" th:text="${servico.status ?: 'Concluído'}">Status</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
 </body>
 </html>
