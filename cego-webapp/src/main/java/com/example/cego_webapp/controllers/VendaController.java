@@ -1,7 +1,7 @@
 package com.example.cego_webapp.controllers;
 
 import com.example.cego_webapp.dto.VendaDTO;
-import com.example.cego_webapp.models.*; // Importa todos os models, incluindo VendaStatus
+import com.example.cego_webapp.models.*;
 import com.example.cego_webapp.repositories.ClienteRepository;
 import com.example.cego_webapp.repositories.ProdutoRepository;
 import com.example.cego_webapp.repositories.VendaRepository;
@@ -18,6 +18,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -59,7 +60,7 @@ public class VendaController {
     @PostMapping("/create")
     public String createVenda(@Valid @ModelAttribute VendaDTO vendaDTO, BindingResult bindingResult, Model model) {
 
-        // ... sua lógica de validação que já está correta ...
+        // ... lógica de validação (sem alterações) ...
         Cliente cliente = null;
         if (vendaDTO.getClienteId() != null) {
             cliente = clienteRepository.findById(vendaDTO.getClienteId()).orElse(null);
@@ -86,11 +87,13 @@ public class VendaController {
             return "vendas/create";
         }
 
+        // --- LÓGICA DE NEGÓCIO ATUALIZADA ---
         Venda venda = new Venda();
         venda.setCliente(cliente);
         venda.setDataHora(LocalDateTime.now());
-        // NOVO: Define o status da nova venda como REALIZADA
-        venda.setStatus(VendaStatus.REALIZADA);
+
+        // MUDANÇA 1: O status inicial da venda agora é PENDENTE_PAGAMENTO
+        venda.setStatus(VendaStatus.PENDENTE_PAGAMENTO);
 
         List<ItemVenda> itensVenda = new ArrayList<>();
         BigDecimal totalVenda = BigDecimal.ZERO;
@@ -112,18 +115,34 @@ public class VendaController {
         venda.setItens(itensVenda);
         venda.setValorTotal(totalVenda);
 
-        vendaRepository.save(venda);
+        // NOVO: Cria a Conta a Receber associada à venda
+        ContaReceber contaReceber = new ContaReceber();
+        contaReceber.setVenda(venda);
+        contaReceber.setValor(venda.getValorTotal());
+        contaReceber.setStatus(ContaReceberStatus.PENDENTE);
+        // Define uma data de vencimento padrão de 30 dias
+        contaReceber.setDataVencimento(LocalDate.now().plusDays(30));
+
+        // Adiciona a conta à venda para o salvamento em cascata
+        venda.setContaReceber(contaReceber);
+
+        vendaRepository.save(venda); // Salva a venda, os itens e a conta a receber
 
         return "redirect:/vendas";
     }
 
-    // MÉTODO NOVO: Para cancelar a venda e retornar os itens ao estoque
     @GetMapping("/cancelar")
     public String cancelarVenda(@RequestParam Long id) {
         vendaRepository.findById(id).ifPresent(venda -> {
-            // Apenas permite o cancelamento se a venda ainda estiver "REALIZADA"
-            if (venda.getStatus() == VendaStatus.REALIZADA) {
+            // MUDANÇA 2: Apenas permite cancelar vendas com pagamento pendente
+            if (venda.getStatus() == VendaStatus.PENDENTE_PAGAMENTO) {
                 venda.setStatus(VendaStatus.CANCELADA);
+
+                // NOVO: Cancela também a conta a receber associada
+                ContaReceber conta = venda.getContaReceber();
+                if (conta != null) {
+                    conta.setStatus(ContaReceberStatus.CANCELADA);
+                }
 
                 // Devolve os itens da venda para o estoque
                 for (ItemVenda item : venda.getItens()) {

@@ -15,107 +15,45 @@
     <style>
         /* PALETA 3: Elegante e Focado (Grafite com Laranja) */
         :root {
-            --c-primary: #F97316;
+            --c-primary: #0d6efd;
             --c-text-main: #111827;
             --c-text-muted: #4B5563;
             --c-border: #D1D5DB;
             --c-card-bg: #FFFFFF;
             --c-body-bg: #F3F4F6;
-
-            /* Mapeamento para as variáveis do Bootstrap */
-            --bs-primary-rgb: 249, 115, 22;      /* Convertido de #F97316 */
+            --bs-primary-rgb: 249, 115, 22;
             --bs-body-bg: var(--c-body-bg);
             --bs-body-color: var(--c-text-main);
             --border-color: var(--c-border);
         }
-
-        /* ESTILOS GERAIS E LAYOUT */
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bs-body-bg);
-        }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bs-body-bg); }
         .main-layout { display: flex; min-height: 100vh; }
         .content-wrapper { flex-grow: 1; padding: 2rem; overflow-y: auto; }
-
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .fade-in { animation: fadeIn 0.5s ease-out forwards; }
-
-        /* ESTILO DOS CARDS E LISTAS COM A NOVA PALETA */
         .kpi-link-card {
-            display: block;
-            text-decoration: none;
-            color: var(--bs-body-color);
-            background-color: var(--c-card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 1rem;
-            padding: 1.5rem;
-            transition: all 0.2s ease-in-out;
+            display: block; text-decoration: none; color: var(--bs-body-color);
+            background-color: var(--c-card-bg); border: 1px solid var(--border-color);
+            border-radius: 1rem; padding: 1.5rem; transition: all 0.2s ease-in-out;
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
         }
-        .kpi-link-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.07);
-            border-color: var(--c-primary);
-        }
-        .kpi-link-card .kpi-icon {
-            font-size: 1.5rem;
-            color: var(--c-primary);
-        }
-        .kpi-link-card .kpi-title {
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--c-text-muted);
-        }
-        .kpi-link-card .kpi-value {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: var(--c-text-main);
-        }
-
-        .list-card {
-            background-color: var(--c-card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 1rem;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
-        }
-        .list-group-item {
-            background-color: transparent;
-            border-bottom: 1px solid var(--border-color) !important;
-        }
-        .list-group-item:last-child {
-            border-bottom: 0 !important;
-        }
-        .text-muted {
-            color: var(--c-text-muted) !important;
-        }
-
-        /* Badge para status usando a cor primária */
-        .status-badge {
-            background-color: rgba(var(--bs-primary-rgb), 0.1);
-            color: var(--c-primary);
-        }
-
-        /* Ajuste na sidebar para harmonizar com a paleta */
-        aside.bg-dark {
-            background-color: var(--c-text-main) !important; /* Cor grafite escura */
-        }
-
-        /* Botão Primário (Laranja) */
+        .kpi-link-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.07); border-color: var(--c-primary); }
+        .kpi-link-card .kpi-icon { font-size: 1.5rem; color: var(--c-primary); }
+        .kpi-link-card .kpi-title { font-size: 1rem; font-weight: 600; color: var(--c-text-muted); }
+        .kpi-link-card .kpi-value { font-size: 2.5rem; font-weight: 700; color: var(--c-text-main); }
+        .list-card { background-color: var(--c-card-bg); border: 1px solid var(--border-color); border-radius: 1rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05); }
+        .list-group-item { background-color: transparent; border-bottom: 1px solid var(--border-color) !important; }
+        .list-group-item:last-child { border-bottom: 0 !important; }
+        .text-muted { color: var(--c-text-muted) !important; }
         .btn-primary {
-            --bs-btn-color: #fff;
-            --bs-btn-bg: var(--c-primary);
-            --bs-btn-border-color: var(--c-primary);
-            --bs-btn-hover-color: #fff;
-            --bs-btn-hover-bg: #c2410c; /* Tom de laranja mais escuro para hover */
-            --bs-btn-hover-border-color: #c2410c;
+            --bs-btn-color: #fff; --bs-btn-bg: var(--c-primary); --bs-btn-border-color: var(--c-primary);
+            --bs-btn-hover-color: #fff; --bs-btn-hover-bg: #c2410c; --bs-btn-hover-border-color: #c2410c;
         }
     </style>
 </head>
 <body>
-
 <div class="main-layout">
     <div th:replace="~{fragments/sidebar :: sidebar}"></div>
-
     <div class="content-wrapper">
         <main>
             <header class="d-flex justify-content-between align-items-center mb-5 fade-in">
@@ -125,18 +63,15 @@
                 </div>
                 <form th:action="@{/logout}" method="post">
                     <button type="submit" class="btn btn-primary d-flex align-items-center gap-2">
-                        <i class="bi bi-box-arrow-right"></i>
-                        Sair
+                        <i class="bi bi-box-arrow-right"></i> Sair
                     </button>
                 </form>
             </header>
-
             <div class="row">
                 <div class="col-lg-3 col-md-6 mb-4 fade-in" style="animation-delay: 0.1s;">
                     <a th:href="@{/clientes}" class="kpi-link-card">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="kpi-title">Clientes</span>
-                            <i class="bi bi-people-fill kpi-icon"></i>
+                            <span class="kpi-title">Clientes</span><i class="bi bi-people-fill kpi-icon"></i>
                         </div>
                         <div class="kpi-value" th:text="${totalClientes ?: 0}">0</div>
                         <p class="text-muted small mb-0">Total de clientes ativos</p>
@@ -145,8 +80,7 @@
                 <div class="col-lg-3 col-md-6 mb-4 fade-in" style="animation-delay: 0.2s;">
                     <a th:href="@{/produtos}" class="kpi-link-card">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="kpi-title">Produtos</span>
-                            <i class="bi bi-box-seam-fill kpi-icon"></i>
+                            <span class="kpi-title">Produtos</span><i class="bi bi-box-seam-fill kpi-icon"></i>
                         </div>
                         <div class="kpi-value" th:text="${totalProdutos ?: 0}">0</div>
                         <p class="text-muted small mb-0">Itens cadastrados</p>
@@ -155,8 +89,7 @@
                 <div class="col-lg-3 col-md-6 mb-4 fade-in" style="animation-delay: 0.3s;">
                     <a th:href="@{/funcionarios}" class="kpi-link-card">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="kpi-title">Funcionários</span>
-                            <i class="bi bi-person-badge-fill kpi-icon"></i>
+                            <span class="kpi-title">Funcionários</span><i class="bi bi-person-badge-fill kpi-icon"></i>
                         </div>
                         <div class="kpi-value" th:text="${totalFuncionarios ?: '0'}">0</div>
                         <p class="text-muted small mb-0">Membros da equipe</p>
@@ -165,31 +98,24 @@
                 <div class="col-lg-3 col-md-6 mb-4 fade-in" style="animation-delay: 0.4s;">
                     <a th:href="@{/servicos}" class="kpi-link-card">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="kpi-title">Serviços</span>
-                            <i class="bi bi-tools kpi-icon"></i>
+                            <span class="kpi-title">Serviços</span><i class="bi bi-tools kpi-icon"></i>
                         </div>
                         <div class="kpi-value" th:text="${totalServicos ?: '0'}">0</div>
                         <p class="text-muted small mb-0">Registrados no sistema</p>
                     </a>
                 </div>
             </div>
-
             <div class="row">
                 <div class="col-md-6 mb-4 fade-in" style="animation-delay: 0.5s;">
                     <div class="card list-card h-100">
-                        <div class="card-header bg-white border-0 py-3">
-                            <h5 class="fw-bold m-0">Últimos Clientes Adicionados</h5>
-                        </div>
+                        <div class="card-header bg-white border-0 py-3"><h5 class="fw-bold m-0">Últimos Clientes Adicionados</h5></div>
                         <div class="card-body p-0">
-                            <div th:if="${#lists.isEmpty(ultimosClientes)}" class="text-center p-5">
-                                <p class="text-muted">Nenhum cliente cadastrado recentemente.</p>
-                            </div>
+                            <div th:if="${#lists.isEmpty(ultimosClientes)}" class="text-center p-5"><p class="text-muted">Nenhum cliente cadastrado recentemente.</p></div>
                             <ul class="list-group list-group-flush" th:unless="${#lists.isEmpty(ultimosClientes)}">
-                                <li class="list-group-item d-flex justify-content-between align-items-center p-3"
-                                    th:each="cliente : ${ultimosClientes}">
+                                <li class="list-group-item d-flex justify-content-between align-items-center p-3" th:each="cliente : ${ultimosClientes}">
                                     <div>
-                                        <div class="fw-semibold" th:text="${cliente.nome}">Nome do Cliente</div>
-                                        <div class="small text-muted" th:text="${cliente.email}">cliente@email.com</div>
+                                        <div class="fw-semibold" th:text="${cliente.nome}"></div>
+                                        <div class="small text-muted" th:text="${cliente.email}"></div>
                                     </div>
                                     <a th:href="@{/clientes/edit(id=${cliente.id})}" class="btn btn-sm btn-light border">Ver</a>
                                 </li>
@@ -197,24 +123,17 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="col-md-6 mb-4 fade-in" style="animation-delay: 0.6s;">
                     <div class="card list-card h-100">
-                        <div class="card-header bg-white border-0 py-3">
-                            <h5 class="fw-bold m-0">Últimos Serviços Registrados</h5>
-                        </div>
+                        <div class="card-header bg-white border-0 py-3"><h5 class="fw-bold m-0">Últimos Serviços Registrados</h5></div>
                         <div class="card-body p-0">
-                            <div th:if="${#lists.isEmpty(ultimosServicos)}" class="text-center p-5">
-                                <p class="text-muted">Nenhum serviço registrado recentemente.</p>
-                            </div>
+                            <div th:if="${#lists.isEmpty(ultimosServicos)}" class="text-center p-5"><p class="text-muted">Nenhum serviço registrado recentemente.</p></div>
                             <ul class="list-group list-group-flush" th:unless="${#lists.isEmpty(ultimosServicos)}">
-                                <li class="list-group-item d-flex justify-content-between align-items-center p-3"
-                                    th:each="servico : ${ultimosServicos}">
+                                <li class="list-group-item d-flex justify-content-between align-items-center p-3" th:each="servico : ${ultimosServicos}">
                                     <div>
-                                        <div class="fw-semibold" th:text="${servico.nome}">Nome do Serviço</div>
-                                        <div class="small text-muted" th:text="|Valor: R$ ${servico.valor}|">Valor: R$ 0,00</div>
+                                        <div class="fw-semibold" th:text="${servico.nome}"></div>
+                                        <div class="small text-muted" th:text="|Valor: ${#numbers.formatCurrency(servico.preco)}|"></div>
                                     </div>
-                                    <span class="badge rounded-pill fw-semibold status-badge" th:text="${servico.status ?: 'Concluído'}">Status</span>
                                 </li>
                             </ul>
                         </div>
@@ -224,8 +143,6 @@
         </main>
     </div>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-
 </body>
 </html>

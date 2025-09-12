@@ -23,14 +23,31 @@ public class FuncionarioController {
 
     @GetMapping({"", "/"})
     public String getFuncionarios(Model model,
-                              @RequestParam(defaultValue = "0") int page,
-                              @RequestParam(defaultValue = "10") int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
-        Page<Funcionario> funcionariosPage = funcionarioRepository.findAll(pageable);
+                                  @RequestParam(defaultValue = "0") int page,
+                                  @RequestParam(defaultValue = "10") int size,
+                                  @RequestParam(defaultValue = "id,desc") String sort,
+                                  @RequestParam(required = false) String keyword) {
+
+        String[] sortParams = sort.split(",");
+        String sortField = sortParams[0];
+        Sort.Direction sortDir = sortParams[1].equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDir, sortField));
+
+        Page<Funcionario> funcionariosPage;
+        if (keyword != null && !keyword.isEmpty()) {
+            funcionariosPage = funcionarioRepository.findByNomeContainingIgnoreCase(keyword, pageable);
+        } else {
+            funcionariosPage = funcionarioRepository.findAll(pageable);
+        }
 
         model.addAttribute("funcionariosPage", funcionariosPage);
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", funcionariosPage.getTotalPages());
+        model.addAttribute("sortField", sortField);
+        model.addAttribute("sortDir", sortDir.name().toLowerCase());
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("activePage", "funcionarios");
 
         return "funcionarios/index";
     }
@@ -39,41 +56,37 @@ public class FuncionarioController {
     public String createFuncionario(Model model) {
         FuncionarioDTO funcionarioDTO = new FuncionarioDTO();
         model.addAttribute("funcionarioDTO", funcionarioDTO);
-
+        model.addAttribute("activePage", "funcionarios");
         return "funcionarios/create";
     }
 
     @PostMapping("/create")
-    public String createCliente(@Valid @ModelAttribute FuncionarioDTO funcionarioDTO, BindingResult bindingResult) {
-
-        // Validação de documento único (com formatação removida)
+    public String createFuncionario(@Valid @ModelAttribute FuncionarioDTO funcionarioDTO, BindingResult bindingResult, Model model) {
         String documentoLimpo = funcionarioDTO.getDocumento().replaceAll("[^0-9]", "");
         if (funcionarioRepository.findByDocumento(documentoLimpo) != null) {
-            bindingResult.addError(new FieldError(
-                    "funcionarioDTO", "documento", "Documento já cadastrado"
-            ));
+            bindingResult.addError(new FieldError("funcionarioDTO", "documento", "Documento já cadastrado"));
         }
 
         if (bindingResult.hasErrors()) {
+            model.addAttribute("activePage", "funcionarios");
             return "funcionarios/create";
         }
 
         Funcionario funcionario = new Funcionario();
         funcionario.setNome(funcionarioDTO.getNome());
-        funcionario.setDocumento(documentoLimpo); // Salva sem formatação
+        funcionario.setDocumento(documentoLimpo);
         funcionario.setEmail(funcionarioDTO.getEmail());
         funcionario.setTelefone(funcionarioDTO.getTelefone());
         funcionario.setEndereco(funcionarioDTO.getEndereco());
         funcionario.setCargo(funcionarioDTO.getCargo());
         funcionario.setSalario(funcionarioDTO.getSalario());
-
         funcionarioRepository.save(funcionario);
 
         return "redirect:/funcionarios/";
     }
 
     @GetMapping("/edit")
-    public String editCliente(@RequestParam Integer id, Model model) {
+    public String editFuncionario(@RequestParam Integer id, Model model) {
         Funcionario funcionario = funcionarioRepository.findById(id).orElse(null);
         if (funcionario == null) {
             return "redirect:/funcionarios";
@@ -90,51 +103,38 @@ public class FuncionarioController {
 
         model.addAttribute("funcionario", funcionario);
         model.addAttribute("funcionarioDTO", funcionarioDTO);
+        model.addAttribute("activePage", "funcionarios");
 
         return "funcionarios/edit";
-
     }
 
     @PostMapping("/edit")
-    public String editFuncionario(
-            Model model,
-            @RequestParam Integer id,
-            @Valid @ModelAttribute FuncionarioDTO funcionarioDTO,
-            BindingResult bindingResult
-    ) {
-
+    public String editFuncionario(Model model, @RequestParam Integer id, @Valid @ModelAttribute FuncionarioDTO funcionarioDTO, BindingResult bindingResult) {
         Funcionario funcionario = funcionarioRepository.findById(id).orElse(null);
         if (funcionario == null) {
             return "redirect:/funcionarios";
         }
 
-        // Validação de documento único (se alterado)
         String documentoLimpo = funcionarioDTO.getDocumento().replaceAll("[^0-9]", "");
-        if (!documentoLimpo.equals(funcionario.getDocumento())) {
-            Funcionario existing = funcionarioRepository.findByDocumento(documentoLimpo);
-            if (existing != null) {
-                bindingResult.addError(new FieldError(
-                        "funcionarioDTO", "documento", "Documento já cadastrado"
-                ));
-            }
+        Funcionario existing = funcionarioRepository.findByDocumento(documentoLimpo);
+        if (existing != null && !existing.getId().equals(id)) {
+            bindingResult.addError(new FieldError("funcionarioDTO", "documento", "Documento já cadastrado em outro funcionário"));
         }
 
         model.addAttribute("funcionario", funcionario);
 
         if (bindingResult.hasErrors()) {
-            model.addAttribute("funcionario", funcionario);
+            model.addAttribute("activePage", "funcionarios");
             return "funcionarios/edit";
         }
 
-        // update
         funcionario.setNome(funcionarioDTO.getNome());
         funcionario.setDocumento(documentoLimpo);
         funcionario.setEmail(funcionarioDTO.getEmail());
         funcionario.setTelefone(funcionarioDTO.getTelefone());
         funcionario.setEndereco(funcionarioDTO.getEndereco());
         funcionario.setCargo(funcionarioDTO.getCargo());
-        funcionario.setSalario(funcionarioDTO.getSalario()); // Corrigido: usar DTO
-
+        funcionario.setSalario(funcionarioDTO.getSalario());
         funcionarioRepository.save(funcionario);
 
         return "redirect:/funcionarios";
@@ -142,10 +142,7 @@ public class FuncionarioController {
 
     @GetMapping("/delete")
     public String deleteFuncionario(@RequestParam Integer id) {
-        Funcionario funcionario = funcionarioRepository.findById(id).orElse(null);
-        if (funcionario != null) {
-            funcionarioRepository.delete(funcionario);
-        }
+        funcionarioRepository.deleteById(id);
         return "redirect:/funcionarios";
     }
 }

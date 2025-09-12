@@ -36,4 +36,7 @@ public class Venda {
     @Column(nullable = false)
     private VendaStatus status;
 
+    @OneToOne(mappedBy = "venda", cascade = CascadeType.ALL, orphanRemoval = true)
+    private ContaReceber contaReceber;
+
 }

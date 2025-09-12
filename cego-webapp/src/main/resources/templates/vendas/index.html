@@ -45,7 +45,6 @@
                         <tbody class="table-group-divider">
                         <tr th:each="venda : ${vendasPage.content}" class="align-middle"
                             th:classappend="${venda.status == T(com.example.cego_webapp.models.VendaStatus).CANCELADA} ? 'text-muted bg-light' : ''">
-
                             <td class="ps-4">
                                 <div>
                                     <div class="fw-bold" th:text="'#' + ${venda.id}"></div>
@@ -55,27 +54,20 @@
                             <td th:text="${venda.cliente.nome}"></td>
                             <td>
                                 <span th:text="${#lists.size(venda.itens) + ' item(s)'}"></span>
-                                <span th:if="${venda.status == T(com.example.cego_webapp.models.VendaStatus).REALIZADA}"
-                                      class="badge rounded-pill bg-success-subtle text-success-emphasis">Realizada</span>
+                                <span th:if="${venda.status == T(com.example.cego_webapp.models.VendaStatus).PENDENTE_PAGAMENTO}"
+                                      class="badge rounded-pill bg-warning-subtle text-warning-emphasis">Pendente</span>
+                                <span th:if="${venda.status == T(com.example.cego_webapp.models.VendaStatus).PAGA}"
+                                      class="badge rounded-pill bg-success-subtle text-success-emphasis">Paga</span>
                                 <span th:if="${venda.status == T(com.example.cego_webapp.models.VendaStatus).CANCELADA}"
                                       class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis">Cancelada</span>
                             </td>
                             <td class="fw-bold"
                                 th:text="${#numbers.formatCurrency(venda.valorTotal)}"
                                 th:style="${venda.status == T(com.example.cego_webapp.models.VendaStatus).CANCELADA} ? 'text-decoration: line-through;' : ''"></td>
-
                             <td class="text-end pe-4" style="white-space: nowrap;">
-                                <button type="button" class="btn btn-sm btn-outline-info btn-details"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#saleDetailsModal"
-                                        th:data-sale-id="${venda.id}"
-                                        th:data-sale-cliente="${venda.cliente.nome}"
-                                        th:data-sale-data="${#temporals.format(venda.dataHora, 'dd/MM/yyyy HH:mm')}"
-                                        th:data-sale-total="${#numbers.formatCurrency(venda.valorTotal)}"
-                                        title="Detalhes">
-                                    <i class="bi bi-eye-fill"></i>
-                                </button>
-                                <a th:if="${venda.status == T(com.example.cego_webapp.models.VendaStatus).REALIZADA}"
+                                <button type="button" class="btn btn-sm btn-outline-info btn-details" data-bs-toggle="modal" data-bs-target="#saleDetailsModal" th:data-sale-id="${venda.id}" th:data-sale-cliente="${venda.cliente.nome}" th:data-sale-data="${#temporals.format(venda.dataHora, 'dd/MM/yyyy HH:mm')}" th:data-sale-total="${#numbers.formatCurrency(venda.valorTotal)}" title="Detalhes"><i class="bi bi-eye-fill"></i></button>
+
+                                <a th:if="${venda.status == T(com.example.cego_webapp.models.VendaStatus).PENDENTE_PAGAMENTO}"
                                    class="btn btn-sm btn-outline-danger ms-1 btn-cancel"
                                    th:href="@{/vendas/cancelar(id=${venda.id})}"
                                    data-bs-toggle="tooltip" title="Cancelar Venda">
@@ -149,7 +141,7 @@
             document.getElementById('modalSaleDate').textContent = this.getAttribute('data-sale-data');
             document.getElementById('modalSaleTotal').textContent = this.getAttribute('data-sale-total');
             const saleId = this.getAttribute('data-sale-id');
-            const hiddenItemsTable = document.getElementById(`items-for-venda-${saleId}`).querySelector('table');
+            const hiddenItemsContent = document.getElementById(`items-for-venda-${saleId}`).querySelector('table');
             const itemsTableBody = document.getElementById('modalSaleItems');
             if (hiddenItemsTable) { itemsTableBody.innerHTML = hiddenItemsTable.innerHTML; }
             else { itemsTableBody.innerHTML = '<tr><td colspan="4">Nenhum item encontrado.</td></tr>'; }

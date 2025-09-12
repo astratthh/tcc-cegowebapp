@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="veiculosFragment">
+    <label for="selectVeiculo" class="form-label fw-semibold">Veículo (Placa)</label>
+    <select id="selectVeiculo" class="form-select" th:field="*{veiculoId}" required
+            th:disabled="${veiculos == null or veiculos.isEmpty()}">
+        <option value="">
+            Selecione um veículo...
+        </option>
+        <option th:if="${veiculos != null}" th:each="veiculo : ${veiculos}"
+                th:value="${veiculo.id}"
+                th:text="${veiculo.placa + ' - ' + veiculo.modelo}"></option>
+    </select>
+</div>
+
+</body>
+</html>

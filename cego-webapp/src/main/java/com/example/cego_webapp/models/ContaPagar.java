@@ -1,24 +1,27 @@
 package com.example.cego_webapp.models;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-@Data
 @Entity
-@Table(name = "contas_a_receber")
-public class ContaReceber {
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Table(name = "contas_a_pagar")
+public class ContaPagar {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // A conta pode vir de uma venda OU de uma OS, então ambos são opcionais
     @OneToOne
-    @JoinColumn(name = "venda_id")
-    private Venda venda;
+    @JoinColumn(name = "compra_id", nullable = false)
+    private Compra compra;
 
     @Column(nullable = false)
     private BigDecimal valor;
@@ -26,14 +29,12 @@ public class ContaReceber {
     @Column(nullable = false)
     private LocalDate dataVencimento;
 
-    private LocalDate dataRecebimento;
+    private LocalDate dataPagamento;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private ContaReceberStatus status;
+    private ContaPagarStatus status;
 
-    @OneToOne
-    @JoinColumn(name = "ordem_servico_id", unique = true)
-    private OrdemServico ordemServico;
-
+    // Getters e Setters
+    // ...
 }

@@ -1,69 +1,76 @@
 package com.example.cego_webapp.models;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.DecimalMin;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
-import java.util.ArrayList; // Importe para inicializar a lista
+import java.util.Set;
 
 @Entity
+@Table(name = "ordens_servico")
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class OrdemServico implements Serializable {
-
-    @Serial
-    private static final long serialVersionUID = 1L;
+public class OrdemServico {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(nullable = false)
-    @NotNull(message = "Data de criação é obrigatória")
-    private LocalDate dataCriacao;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cliente_id", nullable = false)
+    private Cliente cliente;
 
-    @Column
-    private LocalDate dataConclusao;
-
-    @ManyToOne
-    @JoinColumn(name = "funcionario_id", nullable = false)
-    @NotNull(message = "Funcionário é obrigatório")
-    private Funcionario funcionario;
-
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "veiculo_id", nullable = false)
-    @NotNull(message = "Veículo é obrigatório")
     private Veiculo veiculo;
 
-    @ManyToMany // Relacionamento Many-to-Many com Servico
-    @JoinTable(
-            name = "ordem_servico_servico", // Nome da tabela de junção
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
+    private StatusOrdemServico status;
+
+    @Column(columnDefinition = "TEXT")
+    private String observacoes; // Observações do cliente/serviço
+
+    @Column(columnDefinition = "TEXT")
+    private String observacoesInternas; // Para o histórico simples que sugerimos
+
+    @Column(nullable = false)
+    private BigDecimal valorTotal = BigDecimal.ZERO;
+
+    @CreationTimestamp
+    @Column(name = "data_entrada", nullable = false, updatable = false)
+    private LocalDateTime dataEntrada;
+
+    @Column(name = "data_previsao_entrega")
+    private LocalDateTime previsaoEntrega;
+
+    @UpdateTimestamp
+    @Column(name = "data_ultima_atualizacao")
+    private LocalDateTime dataUltimaAtualizacao;
+
+    @Column(name = "data_finalizacao")
+    private LocalDateTime dataFinalizacao;
+
+    // Relação com os itens de serviço (OS tem muitos itens)
+    @OneToMany(mappedBy = "ordemServico", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<ItemServico> itens = new ArrayList<>();
+
+    // Relação com os funcionários (Muitos funcionários podem trabalhar em muitas OS)
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "os_funcionarios",
             joinColumns = @JoinColumn(name = "ordem_servico_id"),
-            inverseJoinColumns = @JoinColumn(name = "servico_id")
-    )
-    @NotNull(message = "É necessário selecionar ao menos um serviço")
-    private List<Servico> servicos = new ArrayList<>(); // Inicializa a lista para evitar NullPointerException
+            inverseJoinColumns = @JoinColumn(name = "funcionario_id"))
+    private Set<Funcionario> funcionarios = new HashSet<>();
 
-    @Column(nullable = false)
-    @NotBlank(message = "Status é obrigatório")
-    private String status; // Ex: "Pendente", "Em Andamento", "Concluída", "Cancelada"
-
-    @Column(length = 500) // Ajuste o tamanho conforme necessário
-    private String observacoes;
-
-    @Column(nullable = false)
-    @NotNull(message = "O valor total é obrigatório")
-    @DecimalMin(value = "0.00", inclusive = true, message = "O valor total não pode ser negativo")
-    private BigDecimal valorTotal; // Campo para o valor total da ordem de serviço
-
+    // Método auxiliar para recalcular o total
+    public void recalcularValorTotal() {
+        this.valorTotal = this.itens.stream()
+                .map(ItemServico::getSubtotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
 }

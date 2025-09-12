@@ -1,5 +1,6 @@
 package com.example.cego_webapp.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -40,9 +41,9 @@ public class Veiculo implements Serializable {
     @NotNull(message = "Ano é obrigatório")
     private Integer ano;
 
-    // Relacionamento Many-to-One com Cliente
+    @JsonIgnore
     @ManyToOne
-    @JoinColumn(name = "cliente_id", nullable = false) // Coluna da chave estrangeira no banco de dados
+    @JoinColumn(name = "cliente_id", nullable = false)
     private Cliente cliente;
 
 }

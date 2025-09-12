@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nova Ordem de Serviço | Gestão Profissional</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"/>
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #f0f2f5; }
+    .main-layout { display: flex; min-height: 100vh; }
+    .content-wrapper { flex-grow: 1; padding: 2rem; overflow-y: auto; }
+    .form-card { background-color: #ffffff; border-radius: 1rem; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08); padding: 2.5rem; border: 1px solid #e9ecef; max-width: 900px; margin: auto; }
+    .form-card-title { text-align: center; font-weight: 700; color: #343a40; margin-bottom: 2rem; }
+    .total-display { font-size: 1.5rem; font-weight: 700; color: #198754; }
+    .select2-container--bootstrap-5 .select2-selection { min-height: calc(3.5rem + 2px); padding: 0.75rem 0.75rem; font-size: 1rem; }
+  </style>
+</head>
+<body>
+
+<div class="main-layout">
+  <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+  <div class="content-wrapper">
+    <div class="form-card">
+      <h2 class="form-card-title">Abrir Nova Ordem de Serviço</h2>
+
+      <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+
+      <form id="clienteForm" th:action="@{/ordens-servico/create}" method="get">
+        <div class="mb-4">
+          <label for="selectCliente" class="form-label fw-semibold">1. Selecione o Cliente</label>
+          <select id="selectCliente" name="clienteId" class="form-select" onchange="this.form.submit()">
+            <option value="">Selecione um cliente...</option>
+            <option th:each="cliente : ${clientes}"
+                    th:value="${cliente.id}"
+                    th:text="${cliente.nome}"
+                    th:selected="${cliente.id == dto.clienteId}"></option>
+          </select>
+        </div>
+      </form>
+
+      <form method="post" th:object="${dto}" th:action="@{/ordens-servico/create}">
+        <input type="hidden" th:field="*{clienteId}"/>
+
+        <fieldset class="mb-4">
+          <div class="row g-3">
+            <div class="col-md-12">
+              <label for="selectVeiculo" class="form-label fw-semibold">2. Selecione o Veículo</label>
+              <select id="selectVeiculo" class="form-select" th:field="*{veiculoId}" required
+                      th:disabled="${veiculos.isEmpty()}">
+                <option value="" th:if="${veiculos.isEmpty()}">Selecione um cliente para ver os veículos</option>
+                <option value="" th:unless="${veiculos.isEmpty()}">Selecione um veículo...</option>
+                <option th:each="veiculo : ${veiculos}"
+                        th:value="${veiculo.id}"
+                        th:text="${veiculo.placa + ' - ' + veiculo.modelo}"></option>
+              </select>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="mb-4">
+          <legend class="h5 fw-bold border-bottom pb-2 mb-3">3. Serviços e Equipe</legend>
+          <div class="mb-3">
+            <label for="selectServicos" class="form-label fw-semibold">Serviços</label>
+            <select id="selectServicos" class="form-select" th:field="*{servicoIds}" multiple required>
+              <option th:each="servico : ${servicos}" th:value="${servico.id}"
+                      th:attr="data-preco=${servico.preco}"
+                      th:text="${servico.nome + ' - ' + #numbers.formatCurrency(servico.preco)}"></option>
+            </select>
+            <div class="d-flex justify-content-end align-items-center mt-3">
+              <span class="me-3 fs-5 fw-semibold">Total dos Serviços:</span>
+              <span class="total-display" id="total-os">R$ 0,00</span>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="selectFuncionarios" class="form-label fw-semibold">Funcionários Envolvidos</label>
+            <select id="selectFuncionarios" class="form-select" th:field="*{funcionarioIds}" multiple>
+              <option th:each="func : ${funcionarios}" th:value="${func.id}"
+                      th:text="${func.nome}"></option>
+            </select>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend class="h5 fw-bold border-bottom pb-2 mb-3">4. Detalhes Adicionais</legend>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="previsaoEntrega" class="form-label fw-semibold">Previsão de Entrega (Opcional)</label>
+              <input type="datetime-local" class="form-control" id="previsaoEntrega"
+                     th:field="*{previsaoEntrega}"/>
+            </div>
+            <div class="col-12">
+              <label for="observacoes" class="form-label fw-semibold">Observações</label>
+              <textarea class="form-control" id="observacoes" rows="3"
+                        th:field="*{observacoes}"></textarea>
+            </div>
+          </div>
+        </fieldset>
+
+        <div class="row g-2 mt-4">
+          <div class="col-6 d-grid"><a class="btn btn-outline-danger" th:href="@{/ordens-servico}">Cancelar</a></div>
+          <div class="col-6 d-grid"><button type="submit" class="btn btn-success"><i class="bi bi-check-circle me-2"></i>Abrir Ordem de Serviço</button></div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+  $(document).ready(function () {
+    // Inicializa todos os Select2
+    $('#selectCliente, #selectVeiculo, #selectServicos, #selectFuncionarios').select2({
+      theme: 'bootstrap-5'
+    });
+
+    const selectServicos = $('#selectServicos');
+
+    function calcularTotal() {
+      let total = 0.0;
+      selectServicos.find('option:selected').each(function () {
+        total += parseFloat($(this).data('preco')) || 0;
+      });
+      $('#total-os').text('R$ ' + total.toFixed(2).replace('.', ','));
+    }
+
+    selectServicos.on('change', calcularTotal);
+
+    // Calcula o total inicial
+    calcularTotal();
+  });
+</script>
+</body>
+</html>

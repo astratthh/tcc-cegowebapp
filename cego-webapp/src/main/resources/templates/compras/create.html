@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nova Compra | Gestão Profissional</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #f0f2f5; } .main-layout { display: flex; min-height: 100vh; } .content-wrapper { flex-grow: 1; padding: 2rem; overflow-y: auto; } .form-card { background-color: #ffffff; border-radius: 1rem; box-shadow: 0 8px 30px rgba(0,0,0,0.08); padding: 2.5rem; border: 1px solid #e9ecef; max-width: 900px; margin: auto; } .form-card-title { text-align: center; font-weight: 700; color: #343a40; margin-bottom: 2rem; } .btn { border-radius: 0.5rem; padding: 0.75rem 1rem; font-weight: 500; } .total-display { font-size: 1.5rem; font-weight: 700; color: #dc3545; } .select2-container--bootstrap-5 .select2-selection { border-radius: 0.5rem; padding: 0.5rem 1rem; height: auto; border: var(--bs-border-width) solid var(--bs-border-color); }
+  </style>
+</head>
+<body>
+<div class="main-layout">
+  <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+  <div class="content-wrapper">
+    <div class="form-card">
+      <h2 class="form-card-title">Registrar Nova Compra</h2>
+      <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+      <form method="post" th:object="${compraDTO}" th:action="@{/compras/create}" id="compraForm">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <div class="row">
+          <div class="col-md-8 mb-4"><label for="fornecedorId" class="form-label fw-semibold">Fornecedor</label><select id="fornecedorId" class="form-select" th:field="*{fornecedorId}"><option value=""></option><option th:each="f : ${fornecedores}" th:value="${f.id}" th:text="${f.nome}"></option></select></div>
+          <div class="col-md-4 mb-4"><label for="dataVencimento" class="form-label fw-semibold">Data de Vencimento</label><input type="date" id="dataVencimento" class="form-control" th:field="*{dataVencimento}" required></div>
+        </div>
+        <hr class="my-4"><h5 class="mb-3">Itens da Compra</h5>
+        <div class="p-3 bg-light rounded-3 border mb-4">
+          <div class="row g-3 align-items-end">
+            <div class="col-sm-5">
+              <label for="produto-select" class="form-label">Produto</label>
+              <select id="produto-select" class="form-select">
+                <option value=""></option>
+                <option th:each="p : ${produtos}" th:value="${p.id}" th:attr="data-nome=${p.nome}, data-preco=${p.preco}" th:text="${p.nome}"></option>
+              </select>
+            </div>
+            <div class="col-sm-2"><label for="quantidade-input" class="form-label">Qtd.</label><input type="number" id="quantidade-input" class="form-control" min="1" value="1"></div>
+            <div class="col-sm-3"><label for="custo-input" class="form-label">Custo Unit. (R$)</label><input type="text" id="custo-input" class="form-control" placeholder="0,00"></div>
+            <div class="col-sm-2 d-grid"><button type="button" id="add-item-btn" class="btn btn-primary">Adicionar</button></div>
+          </div>
+        </div>
+        <div class="table-responsive"><table class="table table-striped"><thead><tr><th>Produto</th><th class="text-center">Qtd.</th><th class="text-end">Custo Unit.</th><th class="text-end">Subtotal</th><th class="text-center">Ação</th></tr></thead><tbody id="itens-table-body"></tbody></table></div>
+        <div class="d-flex justify-content-end align-items-center mt-4"><span class="me-3 fs-5 fw-semibold">Custo Total:</span><span class="total-display" id="total-compra">R$ 0,00</span></div>
+        <div class="row g-2 mt-4"><div class="col-6 d-grid"><a class="btn btn-outline-danger" th:href="@{/compras}">Cancelar</a></div><div class="col-6 d-grid"><button type="submit" id="btn-finalizar-compra" class="btn btn-success" disabled>Finalizar Compra</button></div></div>
+      </form>
+    </div>
+  </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+<script th:inline="javascript"> /* Lógica SweetAlert para erros do servidor */ </script>
+<script>
+  $(document).ready(function () {
+    $('#fornecedorId, #produto-select').select2({
+      theme: "bootstrap-5",
+      placeholder: "Selecione uma opção"
+    });
+    $('#custo-input').mask('#.##0,00', {reverse: true});
+
+    // CORREÇÃO: Movido o listener para fora do evento 'submit'
+    $('#produto-select').on('select2:select', function (e) {
+      const selectedOption = $(e.params.data.element);
+      const preco = selectedOption.data('preco');
+      if (preco) {
+        const precoFormatado = preco.toString().replace('.', ',');
+        $('#custo-input').val(precoFormatado).trigger('input');
+        $('#quantidade-input').focus();
+      }
+    });
+
+    $('#compraForm').on('submit', function() {
+      // Limpa a máscara dos custos antes de enviar para o back-end
+      $('#itens-table-body .custo-unit-val').each(function() {
+        const valLimpo = $(this).val().replace(/\./g, '').replace(',', '.');
+        $(this).val(valLimpo);
+      });
+    });
+
+    // --- O resto da sua lógica de adicionar itens e validar o formulário ---
+    let itemIndex = 0;
+    const btnFinalizar = $('#btn-finalizar-compra');
+
+    function checkFormValidity() {
+      btnFinalizar.prop('disabled', !($('#fornecedorId').val() && $('#dataVencimento').val() && $('#itens-table-body tr').length > 0));
+    }
+    $('#fornecedorId, #dataVencimento').on('change', checkFormValidity);
+
+    $('#add-item-btn').on('click', function () {
+      const produtoSelect = $('#produto-select');
+      const produtoId = produtoSelect.val();
+      const produtoNome = produtoSelect.find('option:selected').text();
+      const quantidade = parseInt($('#quantidade-input').val());
+      const custoStr = $('#custo-input').val();
+
+      if (!produtoId || !custoStr || custoStr === '0,00' || isNaN(quantidade) || quantidade <= 0) {
+        Swal.fire('Atenção', 'Selecione um produto, informe o custo e uma quantidade válida.', 'warning');
+        return;
+      }
+
+      const custoUnitario = parseFloat(custoStr.replace(/\./g, '').replace(',', '.'));
+      const subtotal = custoUnitario * quantidade;
+
+      const newRow = `<tr>
+            <td>${produtoNome}<input type="hidden" name="itens[${itemIndex}].produtoId" value="${produtoId}"></td>
+            <td class="text-center">${quantidade}<input type="hidden" name="itens[${itemIndex}].quantidade" value="${quantidade}"></td>
+            <td class="text-end">R$ ${custoStr}<input type="hidden" class="custo-unit-val" name="itens[${itemIndex}].custoUnitario" value="${custoStr}"></td>
+            <td class="text-end subtotal-val" data-subtotal="${subtotal}">R$ ${subtotal.toFixed(2).replace('.', ',')}</td>
+            <td class="text-center"><button type="button" class="btn btn-danger btn-sm btn-remove-item"><i class="bi bi-trash3-fill"></i></button></td>
+        </tr>`;
+      $('#itens-table-body').append(newRow);
+      itemIndex++;
+      updateTotal();
+
+      produtoSelect.val(null).trigger('change');
+      $('#quantidade-input').val(1);
+      $('#custo-input').val('').trigger('input');
+    });
+
+    $('#itens-table-body').on('click', '.btn-remove-item', function() {
+      $(this).closest('tr').remove();
+      updateTotal();
+    });
+
+    function updateTotal() {
+      let totalCompra = 0;
+      $('.subtotal-val').each(function() {
+        totalCompra += parseFloat($(this).data('subtotal'));
+      });
+      $('#total-compra').text(`R$ ${totalCompra.toFixed(2).replace('.', ',')}`);
+      checkFormValidity();
+    }
+  });
+</script>
+</body>
+</html>

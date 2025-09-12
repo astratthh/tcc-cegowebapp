@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 @EnableWebSecurity
@@ -22,38 +23,35 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                // ### CORREÇÃO AQUI ###
+                // Desabilitamos a proteção CSRF apenas para os endpoints da nossa API
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers("/ordens-servico/api/**")
+                )
                 .authorizeHttpRequests(authorize -> authorize
-                        // Libera o acesso a recursos estáticos (CSS, JS) e à página de login
                         .requestMatchers("/css/**", "/js/**", "/login").permitAll()
-                        // EXIGE autenticação para qualquer outra URL do sistema
+                        .requestMatchers("/", "/clientes/**", "/fornecedores/**", "/produtos/**", "/servicos/**", "/veiculos/**", "/vendas/**", "/compras/**", "/contas-a-receber/**", "/contas-a-pagar/**", "/ordens-servico/**", "/funcionarios/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
-                        .loginPage("/login")           // Nossa página de login customizada
-                        .defaultSuccessUrl("/", true) // Para onde ir após o login
+                        .loginPage("/login")
+                        .defaultSuccessUrl("/", true)
                         .permitAll()
                 )
                 .logout(logout -> logout
-                        .logoutSuccessUrl("/login?logout") // Para onde ir após sair
+                        .logoutSuccessUrl("/login?logout")
                         .permitAll()
                 );
 
         return http.build();
     }
 
-    /**
-     * Define como o Spring Security vai buscar os usuários.
-     * Em vez de uma classe Service, definimos aqui para simplificar.
-     */
     @Bean
     public UserDetailsService userDetailsService() {
         return username -> usuarioRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado com o login: " + username));
     }
 
-    /**
-     * Define o algoritmo para codificar senhas. Essencial para a segurança.
-     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

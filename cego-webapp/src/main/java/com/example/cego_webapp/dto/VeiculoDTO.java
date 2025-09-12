@@ -24,4 +24,5 @@ public class VeiculoDTO {
 
     @NotNull(message = "Cliente é obrigatório")
     private Integer clienteId; // Para associar ao cliente
+
 }
