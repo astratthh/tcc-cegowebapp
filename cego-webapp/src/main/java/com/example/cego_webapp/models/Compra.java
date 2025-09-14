@@ -27,6 +27,8 @@ public class Compra {
     @Column(nullable = false)
     private LocalDateTime dataCompra;
 
+    private LocalDateTime dataCancelamento;
+
     @Column(nullable = false)
     private BigDecimal valorTotal;
 
@@ -40,9 +42,5 @@ public class Compra {
     @Column(nullable = false)
     private CompraStatus status;
 
-    private LocalDateTime dataCancelamento;
-
-    @Column(length = 500) // Permite um motivo mais longo
-    private String motivoCancelamento;
-
+    // O campo motivoCancelamento foi removido.
 }

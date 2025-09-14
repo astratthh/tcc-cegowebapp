@@ -79,10 +79,10 @@
                         title="Detalhes">
                   <i class="bi bi-eye-fill"></i>
                 </button>
-                <a th:if="${compra.status == T(com.example.cego_webapp.models.CompraStatus).FINALIZADA and compra.contaPagar.status == T(com.example.cego_webapp.models.ContaPagarStatus).A_PAGAR}"
+                <a th:if="${compra.status == T(com.example.cego_webapp.models.CompraStatus).FINALIZADA and compra.contaPagar?.status == T(com.example.cego_webapp.models.ContaPagarStatus).A_PAGAR}"
                    class="btn btn-sm btn-outline-danger ms-1 btn-cancel"
-                   th:data-id="${compra.id}"
-                   href="#" data-bs-toggle="tooltip" title="Cancelar Compra">
+                   th:href="@{/compras/cancelar(id=${compra.id})}"
+                   data-bs-toggle="tooltip" title="Cancelar Compra">
                   <i class="bi bi-x-circle-fill"></i>
                 </a>
                 <div class="d-none" th:id="'items-for-compra-' + ${compra.id}">
@@ -132,7 +132,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script th:inline="javascript">
+<script>
   const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
   [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
 
@@ -151,27 +151,22 @@
     });
   });
 
-  // Script para o botão de Cancelar
+  // SCRIPT DE CANCELAR ATUALIZADO E SIMPLIFICADO
   document.querySelectorAll('.btn-cancel').forEach(button => {
     button.addEventListener('click', function (e) {
       e.preventDefault();
-      const compraId = this.getAttribute('data-id');
-      const urlTemplate = `[[@{/compras/cancelar}]]`;
-
       Swal.fire({
-        title: 'Cancelar Compra #' + compraId,
-        input: 'text',
-        inputLabel: 'Motivo do Cancelamento',
-        inputPlaceholder: 'Ex: Mercadoria errada, pedido duplicado...',
-        inputValidator: (value) => { if (!value) { return 'Você precisa informar um motivo!' } },
+        title: 'Confirmar cancelamento?',
+        text: "Esta ação ajustará o estoque e não poderá ser desfeita!",
+        icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: 'Confirmar Cancelamento',
-        cancelButtonText: 'Voltar',
         confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sim, cancelar!',
+        cancelButtonText: 'Voltar'
       }).then((result) => {
-        if (result.isConfirmed && result.value) {
-          const url = `${urlTemplate}?id=${compraId}&motivo=${encodeURIComponent(result.value)}`;
-          window.location.href = url;
+        if (result.isConfirmed) {
+          window.location.href = this.getAttribute('href');
         }
       });
     });

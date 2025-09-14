@@ -28,14 +28,11 @@
         <hr class="my-2">
 
         <li class="nav-item">
-            <a href="#submenu-cadastros" data-bs-toggle="collapse" class="nav-link text-white d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-person-lines-fill"></i>
-                    <span>Cadastros</span>
-                </div>
-                <i class="bi bi-chevron-down arrow-icon"></i>
-            </a>
-            <div class="collapse" id="submenu-cadastros">
+            <div class="nav-link text-white d-flex align-items-center gap-2" style="cursor: default;">
+                <i class="bi bi-person-lines-fill"></i>
+                <span>Cadastros</span>
+            </div>
+            <div>
                 <ul class="nav nav-pills flex-column mt-2 ps-4">
                     <li><a th:href="@{/clientes}" class="nav-link text-white">Clientes</a></li>
                     <li><a th:href="@{/funcionarios}" class="nav-link text-white">Funcionários</a></li>
@@ -48,41 +45,36 @@
         </li>
 
         <li class="nav-item">
-            <a href="#submenu-movimentacoes" data-bs-toggle="collapse" class="nav-link text-white d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-arrow-down-up"></i>
-                    <span>Movimentações</span>
-                </div>
-                <i class="bi bi-chevron-down arrow-icon"></i>
-            </a>
-            <div class="collapse" id="submenu-movimentacoes">
+            <div class="nav-link text-white d-flex align-items-center gap-2" style="cursor: default;">
+                <i class="bi bi-arrow-down-up"></i>
+                <span>Movimentações</span>
+            </div>
+            <div>
                 <ul class="nav nav-pills flex-column mt-2 ps-4">
                     <li><a th:href="@{/vendas}" class="nav-link text-white">Vendas</a></li>
                     <li><a th:href="@{/compras}" class="nav-link text-white">Compras</a></li>
                     <li><a th:href="@{/ordens-servico}" class="nav-link text-white">Ordens de Serviço</a></li>
+                    <li><a th:href="@{/contas-a-receber}" class="nav-link text-white">Contas a Receber</a></li>
+                    <li><a th:href="@{/contas-a-pagar}" class="nav-link text-white">Contas a Pagar</a></li>
                 </ul>
             </div>
         </li>
 
         <li class="nav-item">
-            <a href="#submenu-financeiro" data-bs-toggle="collapse" class="nav-link text-white d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-cash-coin"></i>
-                    <span>Financeiro</span>
-                </div>
-                <i class="bi bi-chevron-down arrow-icon"></i>
-            </a>
-            <div class="collapse" id="submenu-financeiro">
+            <div class="nav-link text-white d-flex align-items-center gap-2" style="cursor: default;">
+                <i class="bi bi-clipboard-data-fill"></i>
+                <span>Relatórios</span>
+            </div>
+            <div>
                 <ul class="nav nav-pills flex-column mt-2 ps-4">
-                    <li><a th:href="@{/contas-a-receber}" class="nav-link text-white">Contas a Receber</a></li>
-                    <li><a th:href="@{/contas-a-pagar}" class="nav-link text-white">Contas a Pagar</a></li>
+                    <li><a href="#" class="nav-link text-white-50">Cadastrais</a></li>
+                    <li><a href="#" class="nav-link text-white-50">Financeiro</a></li>
                 </ul>
             </div>
         </li>
     </ul>
 
     <hr>
-
 </aside>
 
 </body>

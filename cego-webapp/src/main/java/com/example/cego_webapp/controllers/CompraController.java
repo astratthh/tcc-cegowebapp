@@ -6,6 +6,8 @@ import com.example.cego_webapp.repositories.CompraRepository;
 import com.example.cego_webapp.repositories.ContaPagarRepository; // NOVO IMPORT
 import com.example.cego_webapp.repositories.FornecedorRepository;
 import com.example.cego_webapp.repositories.ProdutoRepository;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -109,32 +111,44 @@ public class CompraController {
         return "redirect:/compras";
     }
 
+    @Transactional
     @GetMapping("/cancelar")
-    public String cancelarCompra(@RequestParam Long id, @RequestParam(required = false, defaultValue = "Cancelado pelo usuário") String motivo, RedirectAttributes redirectAttributes) {
+    public String cancelarCompra(@RequestParam Long id, RedirectAttributes redirectAttributes) {
         try {
-            Compra compra = compraRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Compra não encontrada!"));
-            if (compra.getContaPagar() == null || compra.getContaPagar().getStatus() != ContaPagarStatus.A_PAGAR) {
-                redirectAttributes.addFlashAttribute("errorMessage", "Não é possível cancelar uma compra que já foi paga ou cancelada.");
+            Compra compra = compraRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Compra não encontrada!"));
+
+            if (compra.getStatus() != CompraStatus.FINALIZADA) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Esta compra não pode ser cancelada.");
                 return "redirect:/compras";
             }
+            if (compra.getContaPagar() != null && compra.getContaPagar().getStatus() == ContaPagarStatus.PAGA) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Não é possível cancelar uma compra que já foi paga.");
+                return "redirect:/compras";
+            }
+
             for (ItemCompra item : compra.getItens()) {
                 Produto produto = item.getProduto();
                 if (produto.getEstoque() < item.getQuantidade()) {
-                    redirectAttributes.addFlashAttribute("errorMessage", "Cancelamento bloqueado: o produto '" + produto.getNome() + "' não tem estoque suficiente para a devolução (itens já podem ter sido vendidos).");
+                    redirectAttributes.addFlashAttribute("errorMessage", "Cancelamento bloqueado: o produto '" + produto.getNome() + "' não tem estoque suficiente para a devolução.");
                     return "redirect:/compras";
                 }
             }
+
             for (ItemCompra item : compra.getItens()) {
                 Produto produto = item.getProduto();
                 produto.setEstoque(produto.getEstoque() - item.getQuantidade());
                 produtoRepository.save(produto);
             }
+
             compra.setStatus(CompraStatus.CANCELADA);
-            compra.setMotivoCancelamento(motivo);
             compra.setDataCancelamento(LocalDateTime.now());
-            compra.getContaPagar().setStatus(ContaPagarStatus.CANCELADA);
+            if (compra.getContaPagar() != null) {
+                compra.getContaPagar().setStatus(ContaPagarStatus.CANCELADA);
+            }
+
             compraRepository.save(compra);
-            redirectAttributes.addFlashAttribute("successMessage", "Compra #" + id + " cancelada com sucesso!");
+            redirectAttributes.addFlashAttribute("successMessage", "Compra #" + id + " cancelada e estoque ajustado com sucesso!");
+
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Erro ao cancelar a compra: " + e.getMessage());
         }

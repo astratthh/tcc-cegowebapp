@@ -1,184 +1,3 @@
-//package com.example.cego_webapp.controllers;
-//
-//import com.example.cego_webapp.dto.VeiculoDTO;
-//import com.example.cego_webapp.models.Cliente;
-//import com.example.cego_webapp.models.Veiculo;
-//import com.example.cego_webapp.repositories.ClienteRepository;
-//import com.example.cego_webapp.repositories.VeiculoRepository;
-//import jakarta.validation.Valid;
-//import org.springframework.beans.factory.annotation.Autowired;
-//import org.springframework.data.domain.Page;
-//import org.springframework.data.domain.PageRequest;
-//import org.springframework.data.domain.Pageable;
-//import org.springframework.data.domain.Sort;
-//import org.springframework.stereotype.Controller;
-//import org.springframework.ui.Model;
-//import org.springframework.validation.BindingResult;
-//import org.springframework.validation.FieldError;
-//import org.springframework.web.bind.annotation.*;
-//
-//import java.util.List;
-//
-//@Controller
-//@RequestMapping("/veiculos")
-//public class VeiculoController {
-//
-//    @Autowired
-//    VeiculoRepository veiculoRepository;
-//
-//    @Autowired
-//    ClienteRepository clienteRepository;
-//
-//    @GetMapping({"", "/"})
-//    public String getVeiculos(Model model,
-//                              @RequestParam(defaultValue = "0") int page,
-//                              @RequestParam(defaultValue = "13") int size) {
-//        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
-//        Page<Veiculo> veiculosPage = veiculoRepository.findAll(pageable);
-//
-//        model.addAttribute("veiculosPage", veiculosPage);
-//        model.addAttribute("currentPage", page);
-//        model.addAttribute("totalPages", veiculosPage.getTotalPages());
-//
-//        return "veiculos/index";
-//    }
-//
-//    @GetMapping("/cliente/{clienteId}")
-//    public String getVeiculosByCliente(@PathVariable Integer clienteId, Model model) {
-//        Cliente cliente = clienteRepository.findById(clienteId).orElse(null);
-//        if (cliente == null) {
-//            return "redirect:/clientes";
-//        }
-//        List<Veiculo> veiculos = veiculoRepository.findByClienteId(clienteId);
-//        model.addAttribute("cliente", cliente);
-//        model.addAttribute("veiculos", veiculos);
-//        return "veiculos/listaPorCliente";
-//    }
-//
-//    @GetMapping("/create")
-//    public String createVeiculo(Model model) {
-//        VeiculoDTO veiculoDTO = new VeiculoDTO();
-//        model.addAttribute("veiculoDTO", veiculoDTO);
-//        List<Cliente> clientes = clienteRepository.findAll();
-//        model.addAttribute("clientes", clientes);
-//        return "veiculos/create";
-//    }
-//
-//    @PostMapping("/create")
-//    public String createVeiculo(@Valid @ModelAttribute VeiculoDTO veiculoDTO, BindingResult bindingResult, Model model) {
-//
-//        // Validação de placa única
-//        if (veiculoRepository.findByPlaca(veiculoDTO.getPlaca()) != null) {
-//            bindingResult.addError(new FieldError(
-//                    "veiculoDTO", "placa", "Placa já cadastrada"
-//            ));
-//        }
-//
-//        if (bindingResult.hasErrors()) {
-//            List<Cliente> clientes = clienteRepository.findAll();
-//            model.addAttribute("clientes", clientes);
-//            return "veiculos/create";
-//        }
-//
-//        Cliente cliente = clienteRepository.findById(veiculoDTO.getClienteId()).orElse(null);
-//        if (cliente == null) {
-//            bindingResult.addError(new FieldError(
-//                    "veiculoDTO", "clienteId", "Cliente não encontrado"
-//            ));
-//            List<Cliente> clientes = clienteRepository.findAll();
-//            model.addAttribute("clientes", clientes);
-//            return "veiculos/create";
-//        }
-//
-//        Veiculo veiculo = new Veiculo();
-//        veiculo.setPlaca(veiculoDTO.getPlaca());
-//        veiculo.setMarca(veiculoDTO.getMarca());
-//        veiculo.setModelo(veiculoDTO.getModelo());
-//        veiculo.setAno(veiculoDTO.getAno());
-//        veiculo.setCliente(cliente);
-//
-//        veiculoRepository.save(veiculo);
-//
-//        return "redirect:/veiculos/";
-//    }
-//
-//    @GetMapping("/edit")
-//    public String editVeiculo(@RequestParam Integer id, Model model) {
-//        Veiculo veiculo = veiculoRepository.findById(id).orElse(null);
-//        if (veiculo == null) {
-//            return "redirect:/veiculos";
-//        }
-//
-//        VeiculoDTO veiculoDTO = new VeiculoDTO();
-//        veiculoDTO.setPlaca(veiculo.getPlaca());
-//        veiculoDTO.setMarca(veiculo.getMarca());
-//        veiculoDTO.setModelo(veiculo.getModelo());
-//        veiculoDTO.setAno(veiculo.getAno());
-//        veiculoDTO.setClienteId(veiculo.getCliente().getId()); // Preenche o ID do cliente
-//
-//        model.addAttribute("veiculo", veiculo);
-//        model.addAttribute("veiculoDTO", veiculoDTO);
-//        List<Cliente> clientes = clienteRepository.findAll();
-//        model.addAttribute("clientes", clientes);
-//
-//        return "veiculos/edit";
-//    }
-//
-//    @PostMapping("/edit")
-//    public String editVeiculo(
-//            Model model,
-//            @RequestParam Integer id,
-//            @Valid @ModelAttribute VeiculoDTO veiculoDTO,
-//            BindingResult bindingResult
-//    ) {
-//        Veiculo veiculo = veiculoRepository.findById(id).orElse(null);
-//        if (veiculo == null) {
-//            return "redirect:/veiculos";
-//        }
-//
-//        if (!veiculoDTO.getPlaca().equals(veiculo.getPlaca())) {
-//            Veiculo existing = veiculoRepository.findByPlaca(veiculoDTO.getPlaca());
-//            if (existing != null) {
-//                bindingResult.addError(new FieldError(
-//                        "veiculoDTO", "placa", "Placa já cadastrada"
-//                ));
-//            }
-//        }
-//
-//        Cliente cliente = clienteRepository.findById(veiculoDTO.getClienteId()).orElse(null);
-//        if (cliente == null) {
-//            bindingResult.addError(new FieldError(
-//                    "veiculoDTO", "clienteId", "Cliente não encontrado"
-//            ));
-//        }
-//
-//        model.addAttribute("veiculo", veiculo);
-//        if (bindingResult.hasErrors()) {
-//            List<Cliente> clientes = clienteRepository.findAll();
-//            model.addAttribute("clientes", clientes);
-//            return "veiculos/edit";
-//        }
-//
-//        veiculo.setPlaca(veiculoDTO.getPlaca());
-//        veiculo.setMarca(veiculoDTO.getMarca());
-//        veiculo.setModelo(veiculoDTO.getModelo());
-//        veiculo.setAno(veiculoDTO.getAno());
-//        veiculo.setCliente(cliente);
-//        veiculoRepository.save(veiculo);
-//
-//        return "redirect:/veiculos";
-//    }
-//
-//    @GetMapping("/delete")
-//    public String deleteVeiculo(@RequestParam Integer id) {
-//        Veiculo veiculo = veiculoRepository.findById(id).orElse(null);
-//        if (veiculo != null) {
-//            veiculoRepository.delete(veiculo);
-//        }
-//        return "redirect:/veiculos";
-//    }
-//}
-
 package com.example.cego_webapp.controllers;
 
 import com.example.cego_webapp.dto.VeiculoDTO;
@@ -188,6 +7,7 @@ import com.example.cego_webapp.repositories.ClienteRepository;
 import com.example.cego_webapp.repositories.VeiculoRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -197,6 +17,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 import java.util.regex.Matcher;
@@ -218,65 +39,73 @@ public class VeiculoController {
     @GetMapping({"", "/"})
     public String getVeiculos(Model model,
                               @RequestParam(defaultValue = "0") int page,
-                              @RequestParam(defaultValue = "10") int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
-        Page<Veiculo> veiculosPage = veiculoRepository.findAll(pageable);
+                              @RequestParam(defaultValue = "10") int size,
+                              @RequestParam(defaultValue = "id,desc") String sort,
+                              @RequestParam(required = false) String keyword) {
+
+        String[] sortParams = sort.split(",");
+        String sortField = sortParams[0];
+        Sort.Direction sortDir = sortParams.length > 1 && sortParams[1].equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDir, sortField));
+        Page<Veiculo> veiculosPage;
+
+        if(keyword != null && !keyword.isEmpty()){
+            veiculosPage = veiculoRepository.findByPlacaContainingIgnoreCase(keyword, pageable);
+        } else {
+            veiculosPage = veiculoRepository.findAll(pageable);
+        }
 
         model.addAttribute("veiculosPage", veiculosPage);
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", veiculosPage.getTotalPages());
+        model.addAttribute("sortField", sortField);
+        model.addAttribute("sortDir", sortDir.name().toLowerCase());
+        model.addAttribute("keyword", keyword);
 
         return "veiculos/index";
     }
 
     @GetMapping("/create")
     public String createVeiculo(Model model) {
-        VeiculoDTO veiculoDTO = new VeiculoDTO();
-        model.addAttribute("veiculoDTO", veiculoDTO);
-        List<Cliente> clientes = clienteRepository.findAll();
-        model.addAttribute("clientes", clientes);
+        if (!model.containsAttribute("veiculoDTO")) {
+            model.addAttribute("veiculoDTO", new VeiculoDTO());
+        }
+        model.addAttribute("clientes", clienteRepository.findAll(Sort.by("nome")));
         return "veiculos/create";
     }
 
     @PostMapping("/create")
-    public String createVeiculo(@Valid @ModelAttribute VeiculoDTO veiculoDTO, BindingResult bindingResult, Model model) {
+    public String createVeiculo(@Valid @ModelAttribute("veiculoDTO") VeiculoDTO veiculoDTO, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
 
         if (!bindingResult.hasErrors()) {
             String placaLimpa = veiculoDTO.getPlaca() != null ? veiculoDTO.getPlaca().replaceAll("-", "").toUpperCase() : "";
 
-            // Validação de formato de placa
             if (!isValidBrazilianPlate(placaLimpa)) {
-                bindingResult.addError(new FieldError(
-                        "veiculoDTO", "placa", "Formato de placa inválido (ex: AAA0000, AAA0A00, AAA00A0)"
-                ));
+                bindingResult.addError(new FieldError("veiculoDTO", "placa", "Formato de placa inválido (ex: AAA0000)"));
             }
 
-            // Validação de placa única (só se o formato for válido)
             if (!bindingResult.hasErrors() && veiculoRepository.findByPlaca(placaLimpa) != null) {
-                bindingResult.addError(new FieldError(
-                        "veiculoDTO", "placa", "Placa já cadastrada"
-                ));
+                bindingResult.addError(new FieldError("veiculoDTO", "placa", "Placa já cadastrada"));
             }
         }
 
         if (bindingResult.hasErrors()) {
-            List<Cliente> clientes = clienteRepository.findAll();
-            model.addAttribute("clientes", clientes);
-            return "veiculos/create";
+            redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.veiculoDTO", bindingResult);
+            redirectAttributes.addFlashAttribute("veiculoDTO", veiculoDTO);
+            return "redirect:/veiculos/create";
         }
 
         Cliente cliente = clienteRepository.findById(veiculoDTO.getClienteId()).orElse(null);
         if (cliente == null) {
-            bindingResult.addError(new FieldError(
-                    "veiculoDTO", "clienteId", "Cliente não encontrado"
-            ));
-            List<Cliente> clientes = clienteRepository.findAll();
-            model.addAttribute("clientes", clientes);
-            return "veiculos/create";
+            bindingResult.addError(new FieldError("veiculoDTO", "clienteId", "Cliente não encontrado"));
+            redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.veiculoDTO", bindingResult);
+            redirectAttributes.addFlashAttribute("veiculoDTO", veiculoDTO);
+            return "redirect:/veiculos/create";
         }
 
         Veiculo veiculo = new Veiculo();
-        veiculo.setPlaca(veiculoDTO.getPlaca().replaceAll("-", "").toUpperCase()); // Salva a placa limpa e padronizada
+        veiculo.setPlaca(veiculoDTO.getPlaca().replaceAll("-", "").toUpperCase());
         veiculo.setMarca(veiculoDTO.getMarca());
         veiculo.setModelo(veiculoDTO.getModelo());
         veiculo.setAno(veiculoDTO.getAno());
@@ -284,7 +113,8 @@ public class VeiculoController {
 
         veiculoRepository.save(veiculo);
 
-        return "redirect:/veiculos/";
+        redirectAttributes.addFlashAttribute("successMessage", "Veículo cadastrado com sucesso!");
+        return "redirect:/veiculos";
     }
 
     @GetMapping("/edit")
@@ -294,84 +124,78 @@ public class VeiculoController {
             return "redirect:/veiculos";
         }
 
-        VeiculoDTO veiculoDTO = new VeiculoDTO();
-        veiculoDTO.setPlaca(veiculo.getPlaca());
-        veiculoDTO.setMarca(veiculo.getMarca());
-        veiculoDTO.setModelo(veiculo.getModelo());
-        veiculoDTO.setAno(veiculo.getAno());
-        veiculoDTO.setClienteId(veiculo.getCliente().getId());
+        if (!model.containsAttribute("veiculoDTO")) {
+            VeiculoDTO veiculoDTO = new VeiculoDTO();
+            veiculoDTO.setPlaca(veiculo.getPlaca());
+            veiculoDTO.setMarca(veiculo.getMarca());
+            veiculoDTO.setModelo(veiculo.getModelo());
+            veiculoDTO.setAno(veiculo.getAno());
+            veiculoDTO.setClienteId(veiculo.getCliente().getId());
+            model.addAttribute("veiculoDTO", veiculoDTO);
+        }
 
         model.addAttribute("veiculo", veiculo);
-        model.addAttribute("veiculoDTO", veiculoDTO);
-        List<Cliente> clientes = clienteRepository.findAll();
-        model.addAttribute("clientes", clientes);
+        model.addAttribute("clientes", clienteRepository.findAll(Sort.by("nome")));
 
         return "veiculos/edit";
     }
 
     @PostMapping("/edit")
-    public String editVeiculo(
-            Model model,
-            @RequestParam Integer id,
-            @Valid @ModelAttribute VeiculoDTO veiculoDTO,
-            BindingResult bindingResult
-    ) {
+    public String editVeiculo(@RequestParam Integer id, @Valid @ModelAttribute("veiculoDTO") VeiculoDTO veiculoDTO, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
         Veiculo veiculo = veiculoRepository.findById(id).orElse(null);
         if (veiculo == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Veículo não encontrado.");
             return "redirect:/veiculos";
         }
 
-        // Se já houver erros de validação (ex: @NotBlank), não prossegue com as validações customizadas
         if (!bindingResult.hasErrors()) {
             String placaLimpa = veiculoDTO.getPlaca() != null ? veiculoDTO.getPlaca().replaceAll("-", "").toUpperCase() : "";
 
-            // Validação de formato de placa
             if (!isValidBrazilianPlate(placaLimpa)) {
-                bindingResult.addError(new FieldError(
-                        "veiculoDTO", "placa", "Formato de placa inválido (ex: AAA0000, AAA0A00, AAA00A0)"
-                ));
+                bindingResult.addError(new FieldError("veiculoDTO", "placa", "Formato de placa inválido (ex: AAA0000)"));
             }
 
-            // Validação de placa única (se alterada e só se o formato for válido)
-            if (!bindingResult.hasErrors() && !placaLimpa.equals(veiculo.getPlaca())) {
-                Veiculo existing = veiculoRepository.findByPlaca(placaLimpa);
-                if (existing != null) {
-                    bindingResult.addError(new FieldError(
-                            "veiculoDTO", "placa", "Placa já cadastrada"
-                    ));
+            if (!bindingResult.hasErrors() && !placaLimpa.equalsIgnoreCase(veiculo.getPlaca())) {
+                if (veiculoRepository.findByPlaca(placaLimpa) != null) {
+                    bindingResult.addError(new FieldError("veiculoDTO", "placa", "Placa já cadastrada"));
                 }
             }
         }
 
         Cliente cliente = clienteRepository.findById(veiculoDTO.getClienteId()).orElse(null);
         if (cliente == null) {
-            bindingResult.addError(new FieldError(
-                    "veiculoDTO", "clienteId", "Cliente não encontrado"
-            ));
+            bindingResult.addError(new FieldError("veiculoDTO", "clienteId", "Cliente não encontrado"));
         }
 
-        model.addAttribute("veiculo", veiculo);
         if (bindingResult.hasErrors()) {
-            List<Cliente> clientes = clienteRepository.findAll();
-            model.addAttribute("clientes", clientes);
-            return "veiculos/edit";
+            redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.veiculoDTO", bindingResult);
+            redirectAttributes.addFlashAttribute("veiculoDTO", veiculoDTO);
+            return "redirect:/veiculos/edit?id=" + id;
         }
 
-        veiculo.setPlaca(veiculoDTO.getPlaca().replaceAll("-", "").toUpperCase()); // Salva a placa limpa e padronizada
+        veiculo.setPlaca(veiculoDTO.getPlaca().replaceAll("-", "").toUpperCase());
         veiculo.setMarca(veiculoDTO.getMarca());
         veiculo.setModelo(veiculoDTO.getModelo());
         veiculo.setAno(veiculoDTO.getAno());
         veiculo.setCliente(cliente);
         veiculoRepository.save(veiculo);
 
+        redirectAttributes.addFlashAttribute("successMessage", "Veículo atualizado com sucesso!");
         return "redirect:/veiculos";
     }
 
     @GetMapping("/delete")
-    public String deleteVeiculo(@RequestParam Integer id) {
-        Veiculo veiculo = veiculoRepository.findById(id).orElse(null);
-        if (veiculo != null) {
-            veiculoRepository.delete(veiculo);
+    public String deleteVeiculo(@RequestParam Integer id, RedirectAttributes redirectAttributes) {
+        try {
+            if (!veiculoRepository.existsById(id)) {
+                throw new Exception("Veículo não encontrado.");
+            }
+            veiculoRepository.deleteById(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Veículo excluído com sucesso!");
+        } catch (DataIntegrityViolationException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Não é possível excluir o veículo, pois ele está associado a uma ou mais Ordens de Serviço.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Erro ao excluir o veículo: " + e.getMessage());
         }
         return "redirect:/veiculos";
     }
@@ -385,4 +209,3 @@ public class VeiculoController {
         return matcher.matches();
     }
 }
-

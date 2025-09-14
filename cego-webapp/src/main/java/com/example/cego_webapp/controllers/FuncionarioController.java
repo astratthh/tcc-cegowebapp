@@ -5,6 +5,7 @@ import com.example.cego_webapp.models.Funcionario;
 import com.example.cego_webapp.repositories.FuncionarioRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -14,6 +15,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes; // Adicionar este import
 
 @Controller
 @RequestMapping("/funcionarios")
@@ -61,7 +63,7 @@ public class FuncionarioController {
     }
 
     @PostMapping("/create")
-    public String createFuncionario(@Valid @ModelAttribute FuncionarioDTO funcionarioDTO, BindingResult bindingResult, Model model) {
+    public String createFuncionario(@Valid @ModelAttribute FuncionarioDTO funcionarioDTO, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
         String documentoLimpo = funcionarioDTO.getDocumento().replaceAll("[^0-9]", "");
         if (funcionarioRepository.findByDocumento(documentoLimpo) != null) {
             bindingResult.addError(new FieldError("funcionarioDTO", "documento", "Documento já cadastrado"));
@@ -82,7 +84,8 @@ public class FuncionarioController {
         funcionario.setSalario(funcionarioDTO.getSalario());
         funcionarioRepository.save(funcionario);
 
-        return "redirect:/funcionarios/";
+        redirectAttributes.addFlashAttribute("successMessage", "Funcionário cadastrado com sucesso!");
+        return "redirect:/funcionarios";
     }
 
     @GetMapping("/edit")
@@ -109,9 +112,10 @@ public class FuncionarioController {
     }
 
     @PostMapping("/edit")
-    public String editFuncionario(Model model, @RequestParam Integer id, @Valid @ModelAttribute FuncionarioDTO funcionarioDTO, BindingResult bindingResult) {
+    public String editFuncionario(Model model, @RequestParam Integer id, @Valid @ModelAttribute FuncionarioDTO funcionarioDTO, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
         Funcionario funcionario = funcionarioRepository.findById(id).orElse(null);
         if (funcionario == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Funcionário não encontrado.");
             return "redirect:/funcionarios";
         }
 
@@ -137,12 +141,23 @@ public class FuncionarioController {
         funcionario.setSalario(funcionarioDTO.getSalario());
         funcionarioRepository.save(funcionario);
 
+        redirectAttributes.addFlashAttribute("successMessage", "Funcionário atualizado com sucesso!");
         return "redirect:/funcionarios";
     }
 
     @GetMapping("/delete")
-    public String deleteFuncionario(@RequestParam Integer id) {
-        funcionarioRepository.deleteById(id);
+    public String deleteFuncionario(@RequestParam Integer id, RedirectAttributes redirectAttributes) {
+        try {
+            if (!funcionarioRepository.existsById(id)) {
+                throw new Exception("Funcionário não encontrado.");
+            }
+            funcionarioRepository.deleteById(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Funcionário excluído com sucesso!");
+        } catch (DataIntegrityViolationException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Não é possível excluir o funcionário, pois ele está associado a uma ou mais Ordens de Serviço.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Erro ao excluir o funcionário: " + e.getMessage());
+        }
         return "redirect:/funcionarios";
     }
 }

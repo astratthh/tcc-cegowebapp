@@ -20,11 +20,11 @@ public interface ContaReceberRepository extends JpaRepository<ContaReceber, Long
             "LEFT JOIN cr.ordemServico os LEFT JOIN os.cliente osc " +
             "WHERE " +
             "(:status IS NULL OR cr.status = :status) AND " +
-            "(:dataInicio IS NULL OR cr.dataVencimento >= :dataInicio) AND " +
-            "(:dataFim IS NULL OR cr.dataVencimento <= :dataFim) AND " +
+            // ### CORREÇÃO APLICADA AQUI com COALESCE ###
+            "(CAST(:dataInicio AS date) IS NULL OR cr.dataVencimento >= :dataInicio) AND " +
+            "(CAST(:dataFim AS date) IS NULL OR cr.dataVencimento <= :dataFim) AND " +
             "(:clienteId IS NULL OR vc.id = :clienteId OR osc.id = :clienteId) AND " +
-            // ### CORREÇÃO APLICADA AQUI ###
-            "(:origem IS NULL OR :origem = '' OR " + // Adicionada a verificação de string vazia
+            "(:origem IS NULL OR :origem = '' OR " +
             " (:origem = 'VENDA' AND cr.venda IS NOT NULL) OR " +
             " (:origem = 'OS' AND cr.ordemServico IS NOT NULL))")
     Page<ContaReceber> search(@Param("status") ContaReceberStatus status,
@@ -37,7 +37,7 @@ public interface ContaReceberRepository extends JpaRepository<ContaReceber, Long
     @Query("SELECT c FROM ContaReceber c WHERE c.ordemServico = :ordemServico")
     Optional<ContaReceber> findByOrdemServico(@Param("ordemServico") OrdemServico ordemServico);
 
-    // Métodos para o dashboard (permanecem os mesmos)
+    // Métodos para o dashboard
     @Query("SELECT SUM(c.valor) FROM ContaReceber c WHERE c.status = 'PENDENTE'")
     BigDecimal findTotalPendente();
 

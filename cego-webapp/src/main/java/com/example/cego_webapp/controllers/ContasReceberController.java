@@ -2,7 +2,7 @@ package com.example.cego_webapp.controllers;
 
 import com.example.cego_webapp.models.ContaReceber;
 import com.example.cego_webapp.models.ContaReceberStatus;
-import com.example.cego_webapp.models.VendaStatus; // Se você usa VendaStatus, mantenha o import
+import com.example.cego_webapp.models.VendaStatus;
 import com.example.cego_webapp.repositories.ClienteRepository;
 import com.example.cego_webapp.repositories.ContaReceberRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,23 +39,22 @@ public class ContasReceberController {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "dataVencimento"));
 
         ContaReceberStatus statusEnum = null;
-        LocalDate dataFimAjustada = dataFim; // Cria uma variável para ajustar a data final se necessário
+        LocalDate dataFimAjustada = dataFim;
 
-        // ### LÓGICA CORRIGIDA PARA O FILTRO "ATRASADO" ###
+        // Lógica especial para o filtro "Atrasado"
         if ("ATRASADO".equals(status)) {
-            // Se o filtro for "Atrasado", forçamos o status a ser "PENDENTE"
-            // e a data final a ser "ontem", garantindo que só os vencidos apareçam.
             statusEnum = ContaReceberStatus.PENDENTE;
+            // Define a data final como "ontem" para buscar apenas os vencidos
             dataFimAjustada = LocalDate.now().minusDays(1);
         } else if (status != null && !status.isEmpty()) {
             try {
                 statusEnum = ContaReceberStatus.valueOf(status);
             } catch (IllegalArgumentException e) {
-                // Status inválido, ignora o filtro de status
+                // Ignora parâmetro de status inválido
             }
         }
 
-        // Usa a data final ajustada na busca
+        // Chama o método de busca robusto do repositório
         Page<ContaReceber> contasPage = contaReceberRepository.search(statusEnum, dataInicio, dataFimAjustada, clienteId, origem, pageable);
 
         // Envia dados para o dashboard (totais gerais)

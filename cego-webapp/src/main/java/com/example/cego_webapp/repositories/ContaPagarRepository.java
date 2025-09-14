@@ -17,8 +17,9 @@ public interface ContaPagarRepository extends JpaRepository<ContaPagar, Long> {
     @Query("SELECT c FROM ContaPagar c WHERE " +
             "(:status IS NULL OR c.status = :status) AND " +
             "(:fornecedorId IS NULL OR c.compra.fornecedor.id = :fornecedorId) AND " +
-            "(:dataInicio IS NULL OR c.dataVencimento >= :dataInicio) AND " +
-            "(:dataFim IS NULL OR c.dataVencimento <= :dataFim)")
+            // ### CORREÇÃO PREVENTIVA APLICADA AQUI ###
+            "(CAST(:dataInicio AS date) IS NULL OR c.dataVencimento >= :dataInicio) AND " +
+            "(CAST(:dataFim AS date) IS NULL OR c.dataVencimento <= :dataFim)")
     Page<ContaPagar> findWithFilters(
             @Param("status") ContaPagarStatus status,
             @Param("fornecedorId") Integer fornecedorId,

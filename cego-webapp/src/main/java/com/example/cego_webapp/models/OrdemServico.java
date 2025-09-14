@@ -67,7 +67,9 @@ public class OrdemServico {
             inverseJoinColumns = @JoinColumn(name = "funcionario_id"))
     private Set<Funcionario> funcionarios = new HashSet<>();
 
-    // Método auxiliar para recalcular o total
+    @OneToOne(mappedBy = "ordemServico", fetch = FetchType.LAZY)
+    private ContaReceber contaReceber;
+
     public void recalcularValorTotal() {
         this.valorTotal = this.itens.stream()
                 .map(ItemServico::getSubtotal)

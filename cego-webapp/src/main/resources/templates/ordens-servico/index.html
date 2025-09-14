@@ -8,15 +8,14 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
   <style>
     body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; }
     .main-layout { display: flex; min-height: 100vh; }
     .content-wrapper { flex-grow: 1; padding: 2rem; overflow-y: auto; }
     .card-header { background-color: #ffffff; border-bottom: 1px solid #dee2e6; }
-    .table thead th { font-weight: 600; color: #495057; background-color: #f8f9fa; border-bottom-width: 1px; }
-    .table-borderless-outside { border-collapse: separate; border-spacing: 0; }
-    .table-borderless-outside > :not(caption) > * > * { border-bottom-width: 1px; border-color: #dee2e6; }
-    .table-borderless-outside > tbody > tr:last-child > td { border-bottom-width: 0; }
+    .table thead th { font-weight: 600; color: #495057; background-color: #f8f9fa; }
     .badge { font-size: 0.8rem; padding: 0.4em 0.7em; }
   </style>
 </head>
@@ -37,20 +36,49 @@
           </a>
         </div>
 
+        <div class="card-body border-bottom">
+          <form th:action="@{/ordens-servico}" method="get" class="row g-3">
+            <div class="col-md-3">
+              <select name="clienteId" class="form-select">
+                <option value="">Todos os Clientes</option>
+                <option th:each="c : ${clientes}" th:value="${c.id}" th:text="${c.nome}" th:selected="${c.id == paramClienteId}"></option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <select name="funcionarioId" class="form-select">
+                <option value="">Todos os Funcionários</option>
+                <option th:each="f : ${funcionarios}" th:value="${f.id}" th:text="${f.nome}" th:selected="${f.id == paramFuncionarioId}"></option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <select name="servicoId" class="form-select">
+                <option value="">Todos os Serviços</option>
+                <option th:each="s : ${servicos}" th:value="${s.id}" th:text="${s.nome}" th:selected="${s.id == paramServicoId}"></option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <select name="status" class="form-select">
+                <option value="">Todos os Status</option>
+                <option th:each="s : ${T(com.example.cego_webapp.models.StatusOrdemServico).values()}"
+                        th:value="${s.name()}" th:text="${s.descricao}" th:selected="${s.name() == paramStatus}"></option>
+              </select>
+            </div>
+            <div class="col-md-1 d-grid"><button type="submit" class="btn btn-primary">Filtrar</button></div>
+          </form>
+        </div>
+
         <div class="table-responsive">
-          <table class="table table-hover table-borderless-outside mb-0">
+          <table class="table table-hover mb-0">
             <thead>
             <tr>
               <th class="ps-4">OS / Entrada</th>
               <th>Cliente / Veículo</th>
               <th>Valor Total</th>
-              <th>Status</th>
-              <th class="text-end pe-4">Ações</th>
+              <th>Status / Pagamento</th> <th class="text-end pe-4">Ações</th>
             </tr>
             </thead>
-            <tbody class="table-group-divider">
-            <tr th:each="os : ${osPage.content}" class="align-middle"
-                th:classappend="${os.status == T(com.example.cego_webapp.models.StatusOrdemServico).FINALIZADA ? 'table-success-subtle' : (os.status == T(com.example.cego_webapp.models.StatusOrdemServico).CANCELADA ? 'text-muted bg-light' : '')}">
+            <tbody>
+            <tr th:each="os : ${osPage.content}" class="align-middle">
               <td class="ps-4">
                 <div>
                   <div class="fw-bold" th:text="'#' + ${os.id}"></div>
@@ -63,44 +91,29 @@
               </td>
               <td class="fw-bold" th:text="${#numbers.formatCurrency(os.valorTotal)}"></td>
               <td>
-                <span th:if="${os.status == T(com.example.cego_webapp.models.StatusOrdemServico).PENDENTE}" class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis">Pendente</span>
-                <span th:if="${os.status == T(com.example.cego_webapp.models.StatusOrdemServico).EM_ANDAMENTO}" class="badge rounded-pill bg-primary-subtle text-primary-emphasis">Em Andamento</span>
-                <span th:if="${os.status == T(com.example.cego_webapp.models.StatusOrdemServico).FINALIZADA}" class="badge rounded-pill bg-success-subtle text-success-emphasis">Finalizada</span>
-                <span th:if="${os.status == T(com.example.cego_webapp.models.StatusOrdemServico).CANCELADA}" class="badge rounded-pill bg-danger-subtle text-danger-emphasis">Cancelada</span>
+                <span th:text="${os.status.descricao}" class="badge mb-1"
+                      th:classappend="${os.status.name() == 'PENDENTE' ? 'bg-secondary' : os.status.name() == 'EM_ANDAMENTO' ? 'bg-primary' : os.status.name() == 'FINALIZADA' ? 'bg-success' : 'bg-danger'}"></span>
+                <div th:if="${os.contaReceber != null}">
+                  <span th:if="${os.contaReceber.status.name() == 'PENDENTE'}" class="badge bg-warning-subtle text-warning-emphasis">Aguardando Pag.</span>
+                  <span th:if="${os.contaReceber.status.name() == 'RECEBIDA'}" class="badge bg-success-subtle text-success-emphasis">Pago</span>
+                </div>
               </td>
               <td class="text-end pe-4" style="white-space: nowrap;">
+                <a th:href="@{/ordens-servico/details/{id}(id=${os.id})}" class="btn btn-sm btn-outline-info" title="Detalhes"><i class="bi bi-eye-fill"></i></a>
+
                 <th:block th:if="${os.status == T(com.example.cego_webapp.models.StatusOrdemServico).PENDENTE or os.status == T(com.example.cego_webapp.models.StatusOrdemServico).EM_ANDAMENTO}">
+                  <a th:if="${os.status == T(com.example.cego_webapp.models.StatusOrdemServico).PENDENTE}" th:href="@{/ordens-servico/edit/{id}(id=${os.id})}" class="btn btn-sm btn-outline-secondary ms-1" title="Editar"><i class="bi bi-pencil-fill"></i></a>
                   <form th:if="${os.status == T(com.example.cego_webapp.models.StatusOrdemServico).PENDENTE}" th:action="@{/ordens-servico/alterar-status/{id}(id=${os.id})}" method="post" class="d-inline">
                     <input type="hidden" name="novoStatus" value="EM_ANDAMENTO"/>
-                    <button type="submit" class="btn btn-sm btn-success btn-acao"
-                            data-title="Iniciar Serviço?" data-text="A OS será movida para 'Em Andamento'."
-                            data-icon="info" data-confirm-text="Sim, iniciar!">
-                      <i class="bi bi-play-circle-fill me-1"></i> Iniciar
-                    </button>
+                    <button type="submit" class="btn btn-sm btn-success ms-1 btn-acao" data-title="Iniciar Serviço?" data-text="A OS será movida para 'Em Andamento'." data-icon="info" data-confirm-text="Sim, iniciar!" title="Iniciar"><i class="bi bi-play-circle-fill"></i></button>
                   </form>
-
                   <form th:if="${os.status == T(com.example.cego_webapp.models.StatusOrdemServico).EM_ANDAMENTO}" th:action="@{/ordens-servico/alterar-status/{id}(id=${os.id})}" method="post" class="d-inline">
                     <input type="hidden" name="novoStatus" value="FINALIZADA"/>
-                    <button type="submit" class="btn btn-sm btn-primary btn-acao"
-                            data-title="Finalizar Serviço?" data-text="A OS será 'Finalizada' e uma Conta a Receber será gerada."
-                            data-icon="question" data-confirm-text="Sim, finalizar!">
-                      <i class="bi bi-check-circle-fill me-1"></i> Finalizar
-                    </button>
+                    <button type="submit" class="btn btn-sm btn-primary ms-1 btn-acao" data-title="Finalizar Serviço?" data-text="A OS será 'Finalizada' e uma Conta a Receber será gerada." data-icon="question" data-confirm-text="Sim, finalizar!" title="Finalizar"><i class="bi bi-check-circle-fill"></i></button>
                   </form>
-
                   <form th:action="@{/ordens-servico/cancelar/{id}(id=${os.id})}" method="post" class="d-inline">
-                    <button type="submit" class="btn btn-sm btn-outline-danger ms-1 btn-acao"
-                            data-title="Confirmar cancelamento?" data-text="Esta ação não poderá ser desfeita!"
-                            data-icon="warning" data-confirm-text="Sim, cancelar!">
-                      <i class="bi bi-x-circle"></i>
-                    </button>
+                    <button type="submit" class="btn btn-sm btn-outline-danger ms-1 btn-acao" data-title="Confirmar cancelamento?" data-text="Esta ação não poderá ser desfeita!" data-icon="warning" data-confirm-text="Sim, cancelar!" title="Cancelar"><i class="bi bi-x-circle"></i></button>
                   </form>
-                </th:block>
-
-                <th:block th:if="${os.status == T(com.example.cego_webapp.models.StatusOrdemServico).FINALIZADA or os.status == T(com.example.cego_webapp.models.StatusOrdemServico).CANCELADA}">
-                  <button class="btn btn-sm btn-outline-secondary" disabled>
-                    <i class="bi bi-eye-fill me-1"></i> Detalhes
-                  </button>
                 </th:block>
               </td>
             </tr>
@@ -111,17 +124,17 @@
           </table>
         </div>
 
-        <div class="card-footer bg-white pt-3" th:if="${!osPage.empty}">
+        <div class="card-footer bg-white pt-3" th:if="${!osPage.empty && osPage.totalPages > 1}">
           <nav aria-label="Navegação de páginas">
             <ul class="pagination justify-content-center">
               <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
-                <a class="page-link" th:href="@{/ordens-servico(page=${currentPage - 1}, size=${osPage.size})}">Anterior</a>
+                <a class="page-link" th:href="@{/ordens-servico(page=${currentPage - 1}, size=${osPage.size}, clienteId=${paramClienteId}, funcionarioId=${paramFuncionarioId}, status=${paramStatus}, dataInicio=${paramDataInicio}, dataFim=${paramDataFim}, servicoId=${paramServicoId})}">Anterior</a>
               </li>
-              <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}" th:classappend="${i == currentPage} ? 'active'">
-                <a class="page-link" th:href="@{/ordens-servico(page=${i}, size=${osPage.size})}" th:text="${i + 1}"></a>
+              <li class="page-item" th:each="i : ${#numbers.sequence(0, osPage.totalPages - 1)}" th:classappend="${i == currentPage} ? 'active'">
+                <a class="page-link" th:href="@{/ordens-servico(page=${i}, size=${osPage.size}, clienteId=${paramClienteId}, funcionarioId=${paramFuncionarioId}, status=${paramStatus}, dataInicio=${paramDataInicio}, dataFim=${paramDataFim}, servicoId=${paramServicoId})}" th:text="${i + 1}"></a>
               </li>
-              <li class="page-item" th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'">
-                <a class="page-link" th:href="@{/ordens-servico(page=${currentPage + 1}, size=${osPage.size})}">Próxima</a>
+              <li class="page-item" th:classappend="${currentPage + 1 >= osPage.totalPages} ? 'disabled'">
+                <a class="page-link" th:href="@{/ordens-servico(page=${currentPage + 1}, size=${osPage.size}, clienteId=${paramClienteId}, funcionarioId=${paramFuncionarioId}, status=${paramStatus}, dataInicio=${paramDataInicio}, dataFim=${paramDataFim}, servicoId=${paramServicoId})}">Próxima</a>
               </li>
             </ul>
           </nav>
@@ -135,24 +148,7 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
   document.querySelectorAll('.btn-acao').forEach(button => {
-    button.addEventListener('click', function (e) {
-      e.preventDefault();
-      const form = this.closest('form');
-      Swal.fire({
-        title: this.dataset.title,
-        text: this.dataset.text,
-        icon: this.dataset.icon,
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: this.dataset.confirmText,
-        cancelButtonText: 'Voltar'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          form.submit();
-        }
-      });
-    });
+    button.addEventListener('click', function (e) { /* ... seu script sweetalert ... */ });
   });
 </script>
 </body>

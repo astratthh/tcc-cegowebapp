@@ -5,6 +5,7 @@ import com.example.cego_webapp.models.Servico;
 import com.example.cego_webapp.repositories.ServicoRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/servicos")
@@ -28,10 +30,9 @@ public class ServicoController {
                               @RequestParam(defaultValue = "id,desc") String sort,
                               @RequestParam(required = false) String keyword) {
 
-        // --- LÓGICA ATUALIZADA PARA ORDENAÇÃO E BUSCA ---
         String[] sortParams = sort.split(",");
         String sortField = sortParams[0];
-        Sort.Direction sortDir = sortParams[1].equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Sort.Direction sortDir = sortParams.length > 1 && sortParams[1].equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortDir, sortField));
 
@@ -41,34 +42,33 @@ public class ServicoController {
         } else {
             servicosPage = servicoRepository.findAll(pageable);
         }
-        // --- FIM DA LÓGICA ATUALIZADA ---
 
         model.addAttribute("servicosPage", servicosPage);
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", servicosPage.getTotalPages());
-
-        // --- ATRIBUTOS ADICIONAIS PARA O FRONT-END ---
         model.addAttribute("sortField", sortField);
         model.addAttribute("sortDir", sortDir.name().toLowerCase());
         model.addAttribute("keyword", keyword);
-        model.addAttribute("activePage", "servicos"); // Para a sidebar
+        model.addAttribute("activePage", "servicos");
 
         return "servicos/index";
     }
 
     @GetMapping("/create")
     public String createServico(Model model) {
-        ServicoDTO servicoDTO = new ServicoDTO();
-        model.addAttribute("servicoDTO", servicoDTO);
-        model.addAttribute("activePage", "servicos"); // Para a sidebar
+        if (!model.containsAttribute("servicoDTO")) {
+            model.addAttribute("servicoDTO", new ServicoDTO());
+        }
+        model.addAttribute("activePage", "servicos");
         return "servicos/create";
     }
 
     @PostMapping("/create")
-    public String createServico(@Valid @ModelAttribute ServicoDTO servicoDTO, BindingResult bindingResult, Model model) {
+    public String createServico(@Valid @ModelAttribute("servicoDTO") ServicoDTO servicoDTO, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
-            model.addAttribute("activePage", "servicos"); // Para a sidebar em caso de erro
-            return "servicos/create";
+            redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.servicoDTO", bindingResult);
+            redirectAttributes.addFlashAttribute("servicoDTO", servicoDTO);
+            return "redirect:/servicos/create";
         }
 
         Servico servico = new Servico();
@@ -77,7 +77,8 @@ public class ServicoController {
         servico.setPreco(servicoDTO.getPreco());
         servicoRepository.save(servico);
 
-        return "redirect:/servicos/";
+        redirectAttributes.addFlashAttribute("successMessage", "Serviço cadastrado com sucesso!");
+        return "redirect:/servicos";
     }
 
     @GetMapping("/edit")
@@ -87,30 +88,31 @@ public class ServicoController {
             return "redirect:/servicos";
         }
 
-        ServicoDTO servicoDTO = new ServicoDTO();
-        servicoDTO.setNome(servico.getNome());
-        servicoDTO.setDescricao(servico.getDescricao());
-        servicoDTO.setPreco(servico.getPreco());
+        if (!model.containsAttribute("servicoDTO")) {
+            ServicoDTO servicoDTO = new ServicoDTO();
+            servicoDTO.setNome(servico.getNome());
+            servicoDTO.setDescricao(servico.getDescricao());
+            servicoDTO.setPreco(servico.getPreco());
+            model.addAttribute("servicoDTO", servicoDTO);
+        }
 
         model.addAttribute("servico", servico);
-        model.addAttribute("servicoDTO", servicoDTO);
-        model.addAttribute("activePage", "servicos"); // Para a sidebar
-
+        model.addAttribute("activePage", "servicos");
         return "servicos/edit";
     }
 
     @PostMapping("/edit")
-    public String editServico(Model model, @RequestParam Integer id, @Valid @ModelAttribute ServicoDTO servicoDTO, BindingResult bindingResult) {
+    public String editServico(@RequestParam Integer id, @Valid @ModelAttribute("servicoDTO") ServicoDTO servicoDTO, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
         Servico servico = servicoRepository.findById(id).orElse(null);
         if (servico == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Serviço não encontrado.");
             return "redirect:/servicos";
         }
 
-        model.addAttribute("servico", servico);
-
         if (bindingResult.hasErrors()) {
-            model.addAttribute("activePage", "servicos"); // Para a sidebar em caso de erro
-            return "servicos/edit";
+            redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.servicoDTO", bindingResult);
+            redirectAttributes.addFlashAttribute("servicoDTO", servicoDTO);
+            return "redirect:/servicos/edit?id=" + id;
         }
 
         servico.setNome(servicoDTO.getNome());
@@ -118,12 +120,23 @@ public class ServicoController {
         servico.setPreco(servicoDTO.getPreco());
         servicoRepository.save(servico);
 
+        redirectAttributes.addFlashAttribute("successMessage", "Serviço atualizado com sucesso!");
         return "redirect:/servicos";
     }
 
     @GetMapping("/delete")
-    public String deleteServico(@RequestParam Integer id) {
-        servicoRepository.deleteById(id);
+    public String deleteServico(@RequestParam Integer id, RedirectAttributes redirectAttributes) {
+        try {
+            if (!servicoRepository.existsById(id)) {
+                throw new Exception("Serviço não encontrado.");
+            }
+            servicoRepository.deleteById(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Serviço excluído com sucesso!");
+        } catch (DataIntegrityViolationException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Não é possível excluir o serviço, pois ele está associado a uma ou mais Ordens de Serviço.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Erro ao excluir o serviço: " + e.getMessage());
+        }
         return "redirect:/servicos";
     }
 }

@@ -10,8 +10,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
-import org.springframework.transaction.annotation.Transactional; // ### IMPORTAR ESTA CLASSE ###
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -36,13 +36,40 @@ public class OrdemServicoController {
 
     @GetMapping({"", "/"})
     public String listOrdens(Model model,
+                             @RequestParam(required = false) Integer clienteId,
+                             @RequestParam(required = false) Integer funcionarioId,
+                             @RequestParam(required = false) String status,
+                             @RequestParam(required = false) LocalDate dataInicio,
+                             @RequestParam(required = false) LocalDate dataFim,
+                             @RequestParam(required = false) Integer servicoId,
                              @RequestParam(defaultValue = "0") int page,
                              @RequestParam(defaultValue = "10") int size) {
+
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "dataEntrada"));
-        Page<OrdemServico> osPage = ordemServicoRepository.findAll(pageable);
+        StatusOrdemServico statusEnum = null;
+        if (status != null && !status.isEmpty()) {
+            try { statusEnum = StatusOrdemServico.valueOf(status); } catch (Exception e) { /* Ignora status inválido */ }
+        }
+
+        Page<OrdemServico> osPage = ordemServicoRepository.search(clienteId, funcionarioId, statusEnum, dataInicio, dataFim, servicoId, pageable);
+
         model.addAttribute("osPage", osPage);
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", osPage.getTotalPages());
+
+        // Carrega dados para os dropdowns de filtro
+        model.addAttribute("clientes", clienteRepository.findAll(Sort.by("nome")));
+        model.addAttribute("funcionarios", funcionarioRepository.findAll(Sort.by("nome")));
+        model.addAttribute("servicos", servicoRepository.findAll(Sort.by("nome")));
+
+        // Devolve os parâmetros para manter os filtros preenchidos na tela
+        model.addAttribute("paramClienteId", clienteId);
+        model.addAttribute("paramFuncionarioId", funcionarioId);
+        model.addAttribute("paramStatus", status);
+        model.addAttribute("paramDataInicio", dataInicio);
+        model.addAttribute("paramDataFim", dataFim);
+        model.addAttribute("paramServicoId", servicoId);
+
         return "ordens-servico/index";
     }
 
@@ -67,6 +94,7 @@ public class OrdemServicoController {
     }
 
     @PostMapping("/create")
+    @Transactional
     public String createOrdemServico(@ModelAttribute("dto") OrdemServicoDTO dto, RedirectAttributes redirectAttributes) {
         try {
             if (dto.getClienteId() == null || dto.getVeiculoId() == null || dto.getServicoIds() == null || dto.getServicoIds().isEmpty()) {
@@ -103,9 +131,20 @@ public class OrdemServicoController {
         }
     }
 
-    // ### CORREÇÃO AQUI ###
-    @Transactional
+    @GetMapping("/details/{id}")
+    public String showDetails(@PathVariable Integer id, Model model, RedirectAttributes redirectAttributes) {
+        try {
+            OrdemServico os = ordemServicoRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Ordem de Serviço #" + id + " não encontrada."));
+            model.addAttribute("os", os);
+            return "ordens-servico/details";
+        } catch (EntityNotFoundException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:/ordens-servico";
+        }
+    }
+
     @PostMapping("/alterar-status/{id}")
+    @Transactional
     public String alterarStatus(@PathVariable Integer id, @RequestParam String novoStatus, RedirectAttributes redirectAttributes) {
         OrdemServico os = ordemServicoRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("OS não encontrada"));
         StatusOrdemServico status = StatusOrdemServico.valueOf(novoStatus);
@@ -115,7 +154,6 @@ public class OrdemServicoController {
 
         if (status == StatusOrdemServico.FINALIZADA) {
             os.setDataFinalizacao(LocalDateTime.now());
-
             ContaReceber conta = new ContaReceber();
             conta.setValor(os.getValorTotal());
             conta.setDataVencimento(LocalDate.now().plusDays(30));
@@ -123,14 +161,13 @@ public class OrdemServicoController {
             conta.setOrdemServico(os);
             contaReceberRepository.save(conta);
         }
-        ordemServicoRepository.save(os); // Este save agora está dentro da mesma transação
+        ordemServicoRepository.save(os);
         redirectAttributes.addFlashAttribute("successMessage", "Status da OS #" + os.getId() + " alterado para " + status.getDescricao() + "!");
         return "redirect:/ordens-servico";
     }
 
-    // ### CORREÇÃO AQUI ###
-    @Transactional
     @PostMapping("/cancelar/{id}")
+    @Transactional
     public String cancelarOS(@PathVariable Integer id, RedirectAttributes redirectAttributes) {
         OrdemServico os = ordemServicoRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("OS não encontrada"));
         Optional<ContaReceber> contaOpt = contaReceberRepository.findByOrdemServico(os);
@@ -146,7 +183,7 @@ public class OrdemServicoController {
         os.setStatus(StatusOrdemServico.CANCELADA);
         String log = "\nOS Cancelada em " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) + ".";
         os.setObservacoesInternas(os.getObservacoesInternas() + log);
-        ordemServicoRepository.save(os); // Este save agora está dentro da mesma transação
+        ordemServicoRepository.save(os);
         redirectAttributes.addFlashAttribute("successMessage", "Ordem de Serviço #" + id + " foi cancelada.");
         return "redirect:/ordens-servico";
     }
