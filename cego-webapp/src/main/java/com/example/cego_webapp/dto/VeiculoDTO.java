@@ -1,5 +1,6 @@
 package com.example.cego_webapp.dto;
 
+import com.example.cego_webapp.models.Veiculo;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -8,7 +9,6 @@ import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
-@NoArgsConstructor
 public class VeiculoDTO {
     @NotEmpty(message = "Placa é obrigatória")
     private String placa;
@@ -25,4 +25,14 @@ public class VeiculoDTO {
     @NotNull(message = "Cliente é obrigatório")
     private Integer clienteId; // Para associar ao cliente
 
+    public VeiculoDTO() {} // construtor vazio
+
+    // NOVO CONSTRUTOR
+    public VeiculoDTO(Veiculo veiculo) {
+        this.setPlaca(veiculo.getPlaca());
+        this.setMarca(veiculo.getMarca());
+        this.setModelo(veiculo.getModelo());
+        this.setAno(veiculo.getAno());
+        this.setClienteId(veiculo.getCliente().getId());
+    }
 }

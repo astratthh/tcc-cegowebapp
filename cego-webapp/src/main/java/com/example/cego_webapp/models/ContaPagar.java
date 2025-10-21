@@ -35,6 +35,7 @@ public class ContaPagar {
     @Column(nullable = false)
     private ContaPagarStatus status;
 
-    // Getters e Setters
-    // ...
+    @Enumerated(EnumType.STRING)
+    @Column(name = "forma_pagamento") // Define o nome da coluna no banco
+    private FormaPagamento formaPagamento;
 }

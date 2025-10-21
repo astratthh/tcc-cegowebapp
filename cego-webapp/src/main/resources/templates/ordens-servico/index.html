@@ -101,16 +101,19 @@
               <td class="text-end pe-4" style="white-space: nowrap;">
                 <a th:href="@{/ordens-servico/details/{id}(id=${os.id})}" class="btn btn-sm btn-outline-info" title="Detalhes"><i class="bi bi-eye-fill"></i></a>
 
-                <th:block th:if="${os.status == T(com.example.cego_webapp.models.StatusOrdemServico).PENDENTE or os.status == T(com.example.cego_webapp.models.StatusOrdemServico).EM_ANDAMENTO}">
-                  <a th:if="${os.status == T(com.example.cego_webapp.models.StatusOrdemServico).PENDENTE}" th:href="@{/ordens-servico/edit/{id}(id=${os.id})}" class="btn btn-sm btn-outline-secondary ms-1" title="Editar"><i class="bi bi-pencil-fill"></i></a>
-                  <form th:if="${os.status == T(com.example.cego_webapp.models.StatusOrdemServico).PENDENTE}" th:action="@{/ordens-servico/alterar-status/{id}(id=${os.id})}" method="post" class="d-inline">
+                <th:block th:if="${os.status.name() == 'PENDENTE' or os.status.name() == 'EM_ANDAMENTO'}">
+                  <a th:href="@{/ordens-servico/edit/{id}(id=${os.id})}" class="btn btn-sm btn-outline-secondary ms-1" title="Editar"><i class="bi bi-pencil-fill"></i></a>
+
+                  <form th:if="${os.status.name() == 'PENDENTE'}" th:action="@{/ordens-servico/alterar-status/{id}(id=${os.id})}" method="post" class="d-inline">
                     <input type="hidden" name="novoStatus" value="EM_ANDAMENTO"/>
                     <button type="submit" class="btn btn-sm btn-success ms-1 btn-acao" data-title="Iniciar Serviço?" data-text="A OS será movida para 'Em Andamento'." data-icon="info" data-confirm-text="Sim, iniciar!" title="Iniciar"><i class="bi bi-play-circle-fill"></i></button>
                   </form>
-                  <form th:if="${os.status == T(com.example.cego_webapp.models.StatusOrdemServico).EM_ANDAMENTO}" th:action="@{/ordens-servico/alterar-status/{id}(id=${os.id})}" method="post" class="d-inline">
+
+                  <form th:if="${os.status.name() == 'EM_ANDAMENTO'}" th:action="@{/ordens-servico/alterar-status/{id}(id=${os.id})}" method="post" class="d-inline">
                     <input type="hidden" name="novoStatus" value="FINALIZADA"/>
                     <button type="submit" class="btn btn-sm btn-primary ms-1 btn-acao" data-title="Finalizar Serviço?" data-text="A OS será 'Finalizada' e uma Conta a Receber será gerada." data-icon="question" data-confirm-text="Sim, finalizar!" title="Finalizar"><i class="bi bi-check-circle-fill"></i></button>
                   </form>
+
                   <form th:action="@{/ordens-servico/cancelar/{id}(id=${os.id})}" method="post" class="d-inline">
                     <button type="submit" class="btn btn-sm btn-outline-danger ms-1 btn-acao" data-title="Confirmar cancelamento?" data-text="Esta ação não poderá ser desfeita!" data-icon="warning" data-confirm-text="Sim, cancelar!" title="Cancelar"><i class="bi bi-x-circle"></i></button>
                   </form>
@@ -148,7 +151,24 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
   document.querySelectorAll('.btn-acao').forEach(button => {
-    button.addEventListener('click', function (e) { /* ... seu script sweetalert ... */ });
+    button.addEventListener('click', function (e) {
+      e.preventDefault();
+      const form = this.closest('form');
+      Swal.fire({
+        title: this.dataset.title,
+        text: this.dataset.text,
+        icon: this.dataset.icon,
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: this.dataset.confirmText,
+        cancelButtonText: 'Voltar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          form.submit();
+        }
+      });
+    });
   });
 </script>
 </body>

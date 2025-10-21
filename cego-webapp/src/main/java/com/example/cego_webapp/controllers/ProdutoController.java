@@ -1,8 +1,11 @@
+// src/main/java/com/example/cego_webapp/controllers/ProdutoController.java
 package com.example.cego_webapp.controllers;
 
 import com.example.cego_webapp.dto.ProdutoDTO;
 import com.example.cego_webapp.models.Produto;
-import com.example.cego_webapp.repositories.ProdutoRepository;
+import com.example.cego_webapp.services.PdfService;
+import com.example.cego_webapp.services.ProdutoService; // NOVO IMPORT
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -16,11 +19,21 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @Controller
 @RequestMapping("/produtos")
 public class ProdutoController {
+
     @Autowired
-    private ProdutoRepository produtoRepository;
+    private ProdutoService produtoService; // INJETA O SERVICE
+
+    @Autowired
+    private PdfService pdfService;
 
     @GetMapping({"", "/"})
     public String getProdutos(Model model,
@@ -32,15 +45,9 @@ public class ProdutoController {
         String[] sortParams = sort.split(",");
         String sortField = sortParams[0];
         Sort.Direction sortDir = sortParams.length > 1 && sortParams[1].equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
-
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortDir, sortField));
 
-        Page<Produto> produtosPage;
-        if (keyword != null && !keyword.isEmpty()) {
-            produtosPage = produtoRepository.findByNomeContainingIgnoreCase(keyword, pageable);
-        } else {
-            produtosPage = produtoRepository.findAll(pageable);
-        }
+        Page<Produto> produtosPage = produtoService.listarProdutos(keyword, pageable);
 
         model.addAttribute("produtosPage", produtosPage);
         model.addAttribute("currentPage", page);
@@ -54,7 +61,7 @@ public class ProdutoController {
     }
 
     @GetMapping("/create")
-    public String createProduto(Model model) {
+    public String createProdutoForm(Model model) {
         if (!model.containsAttribute("produtoDTO")) {
             model.addAttribute("produtoDTO", new ProdutoDTO());
         }
@@ -63,82 +70,88 @@ public class ProdutoController {
     }
 
     @PostMapping("/create")
-    public String createProduto(@Valid @ModelAttribute("produtoDTO") ProdutoDTO produtoDTO, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
+    public String createProduto(@Valid @ModelAttribute("produtoDTO") ProdutoDTO produtoDTO,
+                                BindingResult bindingResult,
+                                RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.produtoDTO", bindingResult);
             redirectAttributes.addFlashAttribute("produtoDTO", produtoDTO);
             return "redirect:/produtos/create";
         }
 
-        Produto produto = new Produto();
-        produto.setNome(produtoDTO.getNome());
-        produto.setDescricao(produtoDTO.getDescricao());
-        produto.setPreco(produtoDTO.getPreco());
-        produto.setEstoque(produtoDTO.getEstoque());
-        produtoRepository.save(produto);
-
+        produtoService.criarProduto(produtoDTO);
         redirectAttributes.addFlashAttribute("successMessage", "Produto cadastrado com sucesso!");
         return "redirect:/produtos";
     }
 
     @GetMapping("/edit")
-    public String editProduto(@RequestParam Integer id, Model model) {
-        Produto produto = produtoRepository.findById(id).orElse(null);
-        if (produto == null) {
+    public String editProdutoForm(@RequestParam Integer id, Model model, RedirectAttributes redirectAttributes) {
+        try {
+            Produto produto = produtoService.buscarPorId(id);
+            if (!model.containsAttribute("produtoDTO")) {
+                // Adicione este construtor ao seu ProdutoDTO
+                model.addAttribute("produtoDTO", new ProdutoDTO(produto));
+            }
+            model.addAttribute("produto", produto);
+            model.addAttribute("activePage", "produtos");
+            return "produtos/edit";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
             return "redirect:/produtos";
         }
-
-        if (!model.containsAttribute("produtoDTO")) {
-            ProdutoDTO produtoDTO = new ProdutoDTO();
-            produtoDTO.setNome(produto.getNome());
-            produtoDTO.setDescricao(produto.getDescricao());
-            produtoDTO.setPreco(produto.getPreco());
-            produtoDTO.setEstoque(produto.getEstoque());
-            model.addAttribute("produtoDTO", produtoDTO);
-        }
-
-        model.addAttribute("produto", produto);
-        model.addAttribute("activePage", "produtos");
-        return "produtos/edit";
     }
 
     @PostMapping("/edit")
-    public String editProduto(@RequestParam Integer id, @Valid @ModelAttribute("produtoDTO") ProdutoDTO produtoDTO, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
-        Produto produto = produtoRepository.findById(id).orElse(null);
-        if (produto == null) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Produto não encontrado.");
-            return "redirect:/produtos";
-        }
-
+    public String editProduto(@RequestParam Integer id, @Valid @ModelAttribute("produtoDTO") ProdutoDTO produtoDTO,
+                              BindingResult bindingResult, RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.produtoDTO", bindingResult);
             redirectAttributes.addFlashAttribute("produtoDTO", produtoDTO);
             return "redirect:/produtos/edit?id=" + id;
         }
 
-        produto.setNome(produtoDTO.getNome());
-        produto.setDescricao(produtoDTO.getDescricao());
-        produto.setPreco(produtoDTO.getPreco());
-        produto.setEstoque(produtoDTO.getEstoque());
-        produtoRepository.save(produto);
-
-        redirectAttributes.addFlashAttribute("successMessage", "Produto atualizado com sucesso!");
-        return "redirect:/produtos";
+        try {
+            produtoService.atualizarProduto(id, produtoDTO);
+            redirectAttributes.addFlashAttribute("successMessage", "Produto atualizado com sucesso!");
+            return "redirect:/produtos";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            redirectAttributes.addFlashAttribute("produtoDTO", produtoDTO);
+            return "redirect:/produtos/edit?id=" + id;
+        }
     }
 
     @GetMapping("/delete")
     public String deleteProduto(@RequestParam Integer id, RedirectAttributes redirectAttributes) {
         try {
-            if (!produtoRepository.existsById(id)) {
-                throw new Exception("Produto não encontrado.");
-            }
-            produtoRepository.deleteById(id);
+            produtoService.deletarProduto(id);
             redirectAttributes.addFlashAttribute("successMessage", "Produto excluído com sucesso!");
         } catch (DataIntegrityViolationException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Não é possível excluir o produto, pois ele está associado a uma ou mais vendas.");
+            // "Tradução" do erro
+            redirectAttributes.addFlashAttribute("errorMessage", "Não é possível excluir o produto, pois ele está associado a Vendas ou Compras.");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Erro ao excluir o produto: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
         return "redirect:/produtos";
+    }
+
+    @GetMapping("/relatorio/pdf")
+    public void gerarRelatorioPdf(@RequestParam(required = false) String keyword, HttpServletResponse response) throws IOException {
+        // Busca a lista completa de produtos
+        List<Produto> produtos = produtoService.listarTodosParaRelatorio(keyword);
+
+        // Prepara as variáveis para o template
+        Map<String, Object> variaveis = new HashMap<>();
+        variaveis.put("produtos", produtos);
+        variaveis.put("dataGeracao", LocalDateTime.now());
+        variaveis.put("totalProdutos", produtos.size());
+
+        // Gera o PDF
+        byte[] pdfBytes = pdfService.gerarPdfDeHtml("produto-relatorio.html", variaveis);
+
+        // Envia o PDF para o navegador
+        response.setContentType("application/pdf");
+        response.setHeader("Content-Disposition", "attachment; filename=relatorio_produtos.pdf");
+        response.getOutputStream().write(pdfBytes);
     }
 }

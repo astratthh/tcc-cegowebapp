@@ -1,8 +1,11 @@
+// src/main/java/com/example/cego_webapp/controllers/ServicoController.java
 package com.example.cego_webapp.controllers;
 
 import com.example.cego_webapp.dto.ServicoDTO;
 import com.example.cego_webapp.models.Servico;
-import com.example.cego_webapp.repositories.ServicoRepository;
+import com.example.cego_webapp.services.PdfService;
+import com.example.cego_webapp.services.ServicoService; // NOVO IMPORT
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -16,12 +19,21 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @Controller
 @RequestMapping("/servicos")
 public class ServicoController {
 
     @Autowired
-    private ServicoRepository servicoRepository;
+    private ServicoService servicoService; // INJETA O SERVICE
+
+    @Autowired
+    private PdfService pdfService;
 
     @GetMapping({"", "/"})
     public String getServicos(Model model,
@@ -33,15 +45,9 @@ public class ServicoController {
         String[] sortParams = sort.split(",");
         String sortField = sortParams[0];
         Sort.Direction sortDir = sortParams.length > 1 && sortParams[1].equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
-
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortDir, sortField));
 
-        Page<Servico> servicosPage;
-        if (keyword != null && !keyword.isEmpty()) {
-            servicosPage = servicoRepository.findByNomeContainingIgnoreCase(keyword, pageable);
-        } else {
-            servicosPage = servicoRepository.findAll(pageable);
-        }
+        Page<Servico> servicosPage = servicoService.listarServicos(keyword, pageable);
 
         model.addAttribute("servicosPage", servicosPage);
         model.addAttribute("currentPage", page);
@@ -55,7 +61,7 @@ public class ServicoController {
     }
 
     @GetMapping("/create")
-    public String createServico(Model model) {
+    public String createServicoForm(Model model) {
         if (!model.containsAttribute("servicoDTO")) {
             model.addAttribute("servicoDTO", new ServicoDTO());
         }
@@ -64,79 +70,81 @@ public class ServicoController {
     }
 
     @PostMapping("/create")
-    public String createServico(@Valid @ModelAttribute("servicoDTO") ServicoDTO servicoDTO, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
+    public String createServico(@Valid @ModelAttribute("servicoDTO") ServicoDTO servicoDTO,
+                                BindingResult bindingResult,
+                                RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.servicoDTO", bindingResult);
             redirectAttributes.addFlashAttribute("servicoDTO", servicoDTO);
             return "redirect:/servicos/create";
         }
-
-        Servico servico = new Servico();
-        servico.setNome(servicoDTO.getNome());
-        servico.setDescricao(servicoDTO.getDescricao());
-        servico.setPreco(servicoDTO.getPreco());
-        servicoRepository.save(servico);
-
+        servicoService.criarServico(servicoDTO);
         redirectAttributes.addFlashAttribute("successMessage", "Serviço cadastrado com sucesso!");
         return "redirect:/servicos";
     }
 
     @GetMapping("/edit")
-    public String editServico(@RequestParam Integer id, Model model) {
-        Servico servico = servicoRepository.findById(id).orElse(null);
-        if (servico == null) {
+    public String editServicoForm(@RequestParam Integer id, Model model, RedirectAttributes redirectAttributes) {
+        try {
+            Servico servico = servicoService.buscarPorId(id);
+            if (!model.containsAttribute("servicoDTO")) {
+                // Adicione este construtor ao seu ServicoDTO
+                model.addAttribute("servicoDTO", new ServicoDTO(servico));
+            }
+            model.addAttribute("servico", servico);
+            model.addAttribute("activePage", "servicos");
+            return "servicos/edit";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
             return "redirect:/servicos";
         }
-
-        if (!model.containsAttribute("servicoDTO")) {
-            ServicoDTO servicoDTO = new ServicoDTO();
-            servicoDTO.setNome(servico.getNome());
-            servicoDTO.setDescricao(servico.getDescricao());
-            servicoDTO.setPreco(servico.getPreco());
-            model.addAttribute("servicoDTO", servicoDTO);
-        }
-
-        model.addAttribute("servico", servico);
-        model.addAttribute("activePage", "servicos");
-        return "servicos/edit";
     }
 
     @PostMapping("/edit")
-    public String editServico(@RequestParam Integer id, @Valid @ModelAttribute("servicoDTO") ServicoDTO servicoDTO, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
-        Servico servico = servicoRepository.findById(id).orElse(null);
-        if (servico == null) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Serviço não encontrado.");
-            return "redirect:/servicos";
-        }
-
+    public String editServico(@RequestParam Integer id, @Valid @ModelAttribute("servicoDTO") ServicoDTO servicoDTO,
+                              BindingResult bindingResult, RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.servicoDTO", bindingResult);
             redirectAttributes.addFlashAttribute("servicoDTO", servicoDTO);
             return "redirect:/servicos/edit?id=" + id;
         }
-
-        servico.setNome(servicoDTO.getNome());
-        servico.setDescricao(servicoDTO.getDescricao());
-        servico.setPreco(servicoDTO.getPreco());
-        servicoRepository.save(servico);
-
-        redirectAttributes.addFlashAttribute("successMessage", "Serviço atualizado com sucesso!");
-        return "redirect:/servicos";
+        try {
+            servicoService.atualizarServico(id, servicoDTO);
+            redirectAttributes.addFlashAttribute("successMessage", "Serviço atualizado com sucesso!");
+            return "redirect:/servicos";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            redirectAttributes.addFlashAttribute("servicoDTO", servicoDTO);
+            return "redirect:/servicos/edit?id=" + id;
+        }
     }
 
     @GetMapping("/delete")
     public String deleteServico(@RequestParam Integer id, RedirectAttributes redirectAttributes) {
         try {
-            if (!servicoRepository.existsById(id)) {
-                throw new Exception("Serviço não encontrado.");
-            }
-            servicoRepository.deleteById(id);
+            servicoService.deletarServico(id);
             redirectAttributes.addFlashAttribute("successMessage", "Serviço excluído com sucesso!");
         } catch (DataIntegrityViolationException e) {
+            // "Tradução" do erro
             redirectAttributes.addFlashAttribute("errorMessage", "Não é possível excluir o serviço, pois ele está associado a uma ou mais Ordens de Serviço.");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Erro ao excluir o serviço: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
         return "redirect:/servicos";
+    }
+
+    @GetMapping("/relatorio/pdf")
+    public void gerarRelatorioPdf(@RequestParam(required = false) String keyword, HttpServletResponse response) throws IOException {
+        List<Servico> servicos = servicoService.listarTodosParaRelatorio(keyword);
+        Map<String, Object> variaveis = new HashMap<>();
+        variaveis.put("servicos", servicos);
+        variaveis.put("dataGeracao", LocalDateTime.now());
+        variaveis.put("totalServicos", servicos.size());
+
+        byte[] pdfBytes = pdfService.gerarPdfDeHtml("servico-relatorio.html", variaveis);
+
+        response.setContentType("application/pdf");
+        response.setHeader("Content-Disposition", "attachment; filename=relatorio_servicos.pdf");
+        response.getOutputStream().write(pdfBytes);
     }
 }

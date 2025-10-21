@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="'Editar Compra #' + ${compra.id}"></title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f0f2f5; }
+        .main-layout { display: flex; min-height: 100vh; }
+        .content-wrapper { flex-grow: 1; padding: 2rem; overflow-y: auto; }
+        .form-card { background-color: #ffffff; border-radius: 1rem; padding: 2.5rem; max-width: 900px; margin: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .total-display { font-size: 1.5rem; font-weight: 700; color: #dc3545; }
+        .select2-container--bootstrap-5 .select2-selection { padding: 0.5rem 1rem; height: auto; }
+    </style>
+</head>
+<body>
+
+<div class="main-layout">
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    <div class="content-wrapper">
+        <div class="form-card">
+            <h2 class="fw-bold text-center mb-4" th:text="'Editar Compra #' + ${compra.id}"></h2>
+            <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+
+            <form id="compraForm" method="post" th:object="${compraDTO}" th:action="@{/compras/edit/{id}(id=${compra.id})}">
+
+                <div class="row">
+                    <div class="col-md-8 mb-4">
+                        <label for="fornecedorId" class="form-label fw-semibold">Fornecedor</label>
+                        <select id="fornecedorId" class="form-select" th:field="*{fornecedorId}" required>
+                            <option value="">Selecione...</option>
+                            <option th:each="f : ${fornecedores}" th:value="${f.id}" th:text="${f.nome}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <label for="dataVencimento" class="form-label fw-semibold">Data de Vencimento</label>
+                        <input type="date" id="dataVencimento" class="form-control" th:field="*{dataVencimento}" required>
+                    </div>
+                </div>
+                <hr class="my-4"><h5 class="mb-3">Itens da Compra</h5>
+
+                <div class="p-3 bg-light rounded-3 border mb-4">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-sm-5">
+                            <label for="produto-select" class="form-label">Produto</label>
+                            <select id="produto-select" class="form-select">
+                                <option value="">Selecione...</option>
+                                <option th:each="p : ${produtos}" th:value="${p.id}" th:text="${p.nome}"
+                                        th:attr="data-nome=${p.nome}, data-custo=${p.preco}"></option>
+                            </select>
+                        </div>
+                        <div class="col-sm-2"><label for="quantidade-input" class="form-label">Qtd.</label><input type="number" id="quantidade-input" class="form-control" min="1" value="1"></div>
+                        <div class="col-sm-3"><label for="custo-input" class="form-label">Custo Unit. (R$)</label><input type="text" id="custo-input" class="form-control" placeholder="0,00"></div>
+                        <div class="col-sm-2 d-grid"><button type="button" id="add-item-btn" class="btn btn-primary">Adicionar</button></div>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead><tr><th>Produto</th><th class="text-center">Qtd.</th><th class="text-end">Custo Unit.</th><th class="text-end">Subtotal</th><th class="text-center">Ação</th></tr></thead>
+                        <tbody id="itens-table-body">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex justify-content-end align-items-center mt-4">
+                    <span class="me-3 fs-5 fw-semibold">Custo Total:</span>
+                    <span class="total-display" id="total-compra">R$ 0,00</span>
+                </div>
+                <div class="row g-2 mt-4">
+                    <div class="col-6 d-grid"><a class="btn btn-outline-danger" th:href="@{/compras}">Cancelar</a></div>
+                    <div class="col-6 d-grid"><button type="submit" id="btn-finalizar-compra" class="btn btn-success">Salvar Alterações</button></div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    // Passa apenas a lista de itens iniciais do Controller para o JavaScript
+    const itensIniciais = /*[[${compraDTO.itens}]]*/ [];
+    /*]]>*/
+
+    $(document).ready(function () {
+        const tableBody = $('#itens-table-body');
+        let itemIndex = 0;
+
+        // --- INICIALIZAÇÃO DE PLUGINS ---
+        $('#fornecedorId, #produto-select').select2({ theme: "bootstrap-5", placeholder: "Selecione..." });
+        $('#custo-input').mask('#.##0,00', {reverse: true});
+
+        // --- FUNÇÕES AUXILIARES ---
+        function formatCurrency(value) {
+            return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function updateTotal() {
+            let totalCompra = 0;
+            tableBody.find('tr').each(function() {
+                totalCompra += parseFloat($(this).data('subtotal'));
+            });
+            $('#total-compra').text('R$ ' + formatCurrency(totalCompra));
+        }
+
+        function addItemToTable(produtoId, produtoNome, quantidade, custoUnitario) {
+            const subtotal = custoUnitario * quantidade;
+            const newRow = `
+                <tr data-subtotal="${subtotal}">
+                    <td>${produtoNome}
+                        <input type="hidden" name="itens[${itemIndex}].produtoId" value="${produtoId}">
+                        <input type="hidden" name="itens[${itemIndex}].quantidade" value="${quantidade}">
+                        <input type="hidden" name="itens[${itemIndex}].custoUnitario" value="${custoUnitario.toFixed(2)}">
+                    </td>
+                    <td class="text-center">${quantidade}</td>
+                    <td class="text-end">R$ ${formatCurrency(custoUnitario)}</td>
+                    <td class="text-end fw-semibold">R$ ${formatCurrency(subtotal)}</td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-danger btn-sm btn-remove-item"><i class="bi bi-trash3-fill"></i></button>
+                    </td>
+                </tr>`;
+            tableBody.append(newRow);
+            itemIndex++;
+        }
+
+        // --- LÓGICA DE CARREGAMENTO INICIAL ---
+        itensIniciais.forEach(item => {
+            addItemToTable(item.produtoId, item.nomeProduto, item.quantidade, parseFloat(item.custoUnitario));
+        });
+        updateTotal();
+
+        // --- EVENTOS DE INTERAÇÃO ---
+
+        // CORRIGIDO: Evento para buscar o preço ao selecionar um produto
+        $('#produto-select').on('select2:select', function (e) {
+            const selectedOption = $(e.params.data.element);
+            const custo = selectedOption.data('custo'); // Usando 'data-custo'
+            if (custo) {
+                $('#custo-input').val(formatCurrency(custo)).trigger('input');
+                $('#quantidade-input').focus();
+            }
+        });
+
+        $('#add-item-btn').on('click', function () {
+            const produtoSelect = $('#produto-select');
+            const produtoId = parseInt(produtoSelect.val());
+            const produtoNome = produtoSelect.find('option:selected').text();
+            const quantidade = parseInt($('#quantidade-input').val());
+            const custoStr = $('#custo-input').val();
+
+            if (!produtoId || !custoStr || custoStr === '0,00' || isNaN(quantidade) || quantidade <= 0) {
+                Swal.fire('Atenção', 'Selecione um produto, informe o custo e uma quantidade válida.', 'warning');
+                return;
+            }
+            const custoUnitario = parseFloat(custoStr.replace(/\./g, '').replace(',', '.'));
+
+            const jaExiste = tableBody.find(`input[name$=".produtoId"][value="${produtoId}"]`).length > 0;
+            if (jaExiste) { Swal.fire('Atenção', 'Este produto já está na compra.', 'warning'); return; }
+
+            addItemToTable(produtoId, produtoNome, quantidade, custoUnitario);
+            updateTotal();
+
+            produtoSelect.val('').trigger('change');
+            $('#quantidade-input').val(1);
+            $('#custo-input').val('');
+        });
+
+        tableBody.on('click', '.btn-remove-item', function() {
+            $(this).closest('tr').remove();
+            updateTotal();
+        });
+    });
+</script>
+</body>
+</html>

@@ -37,7 +37,7 @@
                 </div>
                 <div class="card-body border-bottom">
                     <form th:action="@{/vendas}" method="get" class="row g-2 align-items-center">
-                        <div class="col"><div class="input-group"><span class="input-group-text"><i class="bi bi-search"></i></span><input type="text" name="keyword" class="form-control" placeholder="Buscar por nome do cliente..."></div></div>
+                        <div class="col"><div class="input-group"><span class="input-group-text"><i class="bi bi-search"></i></span><input type="text" name="keyword" class="form-control" placeholder="Buscar por nome do cliente..." th:value="${keyword}"></div></div>
                         <div class="col-auto"><button class="btn btn-secondary" type="submit">Buscar</button></div>
                     </form>
                 </div>
@@ -59,19 +59,25 @@
                             </td>
                             <td th:text="${venda.cliente.nome}"></td>
                             <td>
-                                <span th:text="${#lists.size(venda.itens) + ' item(s)'}"></span>
-                                <span th:if="${venda.status == T(com.example.cego_webapp.models.VendaStatus).PENDENTE_PAGAMENTO}"
-                                      class="badge rounded-pill bg-warning-subtle text-warning-emphasis">Pendente</span>
-                                <span th:if="${venda.status == T(com.example.cego_webapp.models.VendaStatus).PAGA}"
-                                      class="badge rounded-pill bg-success-subtle text-success-emphasis">Paga</span>
-                                <span th:if="${venda.status == T(com.example.cego_webapp.models.VendaStatus).CANCELADA}"
-                                      class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis">Cancelada</span>
+                                <span th:if="${venda.status.name() == 'PENDENTE_PAGAMENTO'}" class="badge bg-warning">Pendente Pag.</span>
+                                <span th:if="${venda.status.name() == 'PAGA'}" class="badge bg-success">Paga</span>
+                                <span th:if="${venda.status.name() == 'CANCELADA'}" class="badge bg-secondary">Cancelada</span>
+
+                                <div th:if="${venda.status.name() == 'PENDENTE_PAGAMENTO' and venda.contaReceber != null and venda.contaReceber.dataVencimento.isBefore(T(java.time.LocalDate).now())}">
+                                    <span class="badge bg-danger-subtle text-danger-emphasis mt-1">Atrasado</span>
+                                </div>
                             </td>
-                            <td class="fw-bold"
-                                th:text="${#numbers.formatCurrency(venda.valorTotal)}"
+                            <td class="fw-bold" th:text="${#numbers.formatCurrency(venda.valorTotal)}"
                                 th:style="${venda.status == T(com.example.cego_webapp.models.VendaStatus).CANCELADA} ? 'text-decoration: line-through;' : ''"></td>
                             <td class="text-end pe-4" style="white-space: nowrap;">
                                 <button type="button" class="btn btn-sm btn-outline-info btn-details" data-bs-toggle="modal" data-bs-target="#saleDetailsModal" th:data-sale-id="${venda.id}" th:data-sale-cliente="${venda.cliente.nome}" th:data-sale-data="${#temporals.format(venda.dataHora, 'dd/MM/yyyy HH:mm')}" th:data-sale-total="${#numbers.formatCurrency(venda.valorTotal)}" title="Detalhes"><i class="bi bi-eye-fill"></i></button>
+
+                                <a th:if="${venda.status == T(com.example.cego_webapp.models.VendaStatus).PENDENTE_PAGAMENTO}"
+                                   class="btn btn-sm btn-outline-secondary ms-1"
+                                   th:href="@{/vendas/edit/{id}(id=${venda.id})}"
+                                   data-bs-toggle="tooltip" title="Editar Venda">
+                                    <i class="bi bi-pencil-fill"></i>
+                                </a>
 
                                 <a th:if="${venda.status == T(com.example.cego_webapp.models.VendaStatus).PENDENTE_PAGAMENTO}"
                                    class="btn btn-sm btn-outline-danger ms-1 btn-cancel"
@@ -99,9 +105,9 @@
                 <div class="card-footer bg-white pt-3" th:if="${!vendasPage.empty}">
                     <nav aria-label="Navegação de páginas">
                         <ul class="pagination justify-content-center">
-                            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'"><a class="page-link" th:href="@{/vendas(page=${currentPage - 1}, size=${vendasPage.size})}">Anterior</a></li>
-                            <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}" th:classappend="${i == currentPage} ? 'active'"><a class="page-link" th:href="@{/vendas(page=${i}, size=${vendasPage.size})}" th:text="${i + 1}"></a></li>
-                            <li class="page-item" th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'"><a class="page-link" th:href="@{/vendas(page=${currentPage + 1}, size=${vendasPage.size})}">Próxima</a></li>
+                            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'"><a class="page-link" th:href="@{/vendas(page=${currentPage - 1}, size=${vendasPage.size}, keyword=${keyword})}">Anterior</a></li>
+                            <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}" th:classappend="${i == currentPage} ? 'active'"><a class="page-link" th:href="@{/vendas(page=${i}, size=${vendasPage.size}, keyword=${keyword})}" th:text="${i + 1}"></a></li>
+                            <li class="page-item" th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'"><a class="page-link" th:href="@{/vendas(page=${currentPage + 1}, size=${vendasPage.size}, keyword=${keyword})}">Próxima</a></li>
                         </ul>
                     </nav>
                 </div>
@@ -149,8 +155,6 @@
             const saleId = this.getAttribute('data-sale-id');
             const hiddenItemsContent = document.getElementById(`items-for-venda-${saleId}`).querySelector('table');
             const itemsTableBody = document.getElementById('modalSaleItems');
-
-            // ### CORREÇÃO APLICADA AQUI ###
             if (hiddenItemsContent) {
                 itemsTableBody.innerHTML = hiddenItemsContent.innerHTML;
             }

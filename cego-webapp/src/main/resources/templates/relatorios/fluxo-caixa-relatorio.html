@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Relatório de Fluxo de Caixa Detalhado</title>
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 10px; }
+        .report-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 9px;}
+        .report-table th, .report-table td { border: 1px solid #ccc; padding: 4px; text-align: left; }
+        .report-table th { background-color: #f2f2f2; font-weight: bold;}
+        .report-table td.currency { text-align: right; }
+        h1, h2 { text-align: center; margin-bottom: 5px; }
+        h1 { font-size: 16px; }
+        h2 { font-size: 14px; margin-top: 15px; }
+        .header-info { text-align: center; margin-bottom: 15px; }
+        .summary-table { width: 60%; border-collapse: collapse; margin: 20px auto; font-size: 11px;}
+        .summary-table td { border: 1px solid #ccc; padding: 6px; }
+        .summary-table .label { font-weight: bold; background-color: #f2f2f2; text-align: right; padding-right: 10px; }
+        .summary-table .value { text-align: right; }
+        .total-entradas { font-weight: bold; background-color: #e9f5e9; }
+        .total-saidas { font-weight: bold; background-color: #fdeeee; }
+        .total-liquido { font-weight: bold; font-size: 12px; background-color: #e6f7ff; }
+    </style>
+</head>
+<body>
+<h1>Relatório de Fluxo de Caixa Detalhado</h1>
+<div class="header-info">
+    Período de Análise:
+    <strong th:text="${#temporals.format(dataInicio, 'dd/MM/yyyy')}"></strong> a
+    <strong th:text="${#temporals.format(dataFim, 'dd/MM/yyyy')}"></strong><br/>
+    Gerado em: <span th:text="${#temporals.format(dataGeracao, 'dd/MM/yyyy HH:mm')}"></span>
+</div>
+
+<h2>Entradas (Contas Recebidas)</h2>
+<table class="report-table">
+    <thead>
+    <tr>
+        <th>Data Rec.</th>
+        <th>Origem</th>
+        <th>Cliente</th>
+        <th>Forma Pag.</th>
+        <th style="text-align: right;">Valor</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="conta : ${entradas}">
+        <td th:text="${#temporals.format(conta.dataRecebimento, 'dd/MM/yyyy')}"></td>
+        <td th:text="${conta.venda != null ? 'Venda #' + conta.venda.id : 'OS #' + conta.ordemServico.id}"></td>
+        <td th:text="${conta.getClienteNome()}"></td>
+        <td th:text="${conta.formaPagamento?.descricao}"></td>
+        <td class="currency" th:text="${#numbers.formatCurrency(conta.valor)}"></td>
+    </tr>
+    <tr th:if="${#lists.isEmpty(entradas)}"><td colspan="5" style="text-align: center;">Nenhuma entrada registrada no período.</td></tr>
+    <tr class="total-entradas">
+        <td colspan="4"><strong>Total de Entradas:</strong></td>
+        <td class="currency"><strong><span th:text="${#numbers.formatCurrency(totalEntradas)}"></span></strong></td>
+    </tr>
+    </tbody>
+</table>
+
+<h2>Saídas (Contas Pagas)</h2>
+<table class="report-table">
+    <thead>
+    <tr>
+        <th>Data Pag.</th>
+        <th>Origem</th>
+        <th>Fornecedor</th>
+        <th>Forma Pag.</th>
+        <th style="text-align: right;">Valor</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="conta : ${saidas}">
+        <td th:text="${#temporals.format(conta.dataPagamento, 'dd/MM/yyyy')}"></td>
+        <td th:text="'Compra #' + ${conta.compra.id}"></td>
+        <td th:text="${conta.compra.fornecedor.nome}"></td>
+        <td th:text="${conta.formaPagamento?.descricao}"></td>
+        <td class="currency" th:text="${#numbers.formatCurrency(conta.valor)}"></td>
+    </tr>
+    <tr th:if="${#lists.isEmpty(saidas)}"><td colspan="5" style="text-align: center;">Nenhuma saída registrada no período.</td></tr>
+    <tr class="total-saidas">
+        <td colspan="4"><strong>Total de Saídas:</strong></td>
+        <td class="currency"><strong><span th:text="${#numbers.formatCurrency(totalSaidas)}"></span></strong></td>
+    </tr>
+    </tbody>
+</table>
+
+<h2>Resumo do Fluxo de Caixa</h2>
+<table class="summary-table">
+    <tr class="total-entradas">
+        <td class="label">Total de Entradas:</td>
+        <td class="value" th:text="${#numbers.formatCurrency(totalEntradas)}"></td>
+    </tr>
+    <tr class="total-saidas">
+        <td class="label">Total de Saídas:</td>
+        <td class="value" th:text="${#numbers.formatCurrency(totalSaidas)}"></td>
+    </tr>
+    <tr class="total-liquido">
+        <td class="label">Fluxo de Caixa Líquido:</td>
+        <td class="value" th:text="${#numbers.formatCurrency(fluxoCaixaLiquido)}"></td>
+    </tr>
+</table>
+</body>
+</html>

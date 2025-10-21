@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Relatório de Fornecedores</title>
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 12px; }
+        .report-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .report-table th, .report-table td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        .report-table th { background-color: #f2f2f2; font-weight: bold; }
+        h1 { text-align: center; }
+        .summary { text-align: right; font-weight: bold; font-size: 14px; }
+    </style>
+</head>
+<body>
+<h1>Relatório de Fornecedores</h1>
+<p>Relatório gerado em: <strong th:text="${#temporals.format(dataGeracao, 'dd/MM/yyyy HH:mm')}"></strong></p>
+<hr/>
+<table class="report-table">
+    <thead>
+    <tr>
+        <th>Nome</th>
+        <th>Documento</th>
+        <th>Email</th>
+        <th>Telefone</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="fornecedor : ${fornecedores}">
+        <td th:text="${fornecedor.nome}"></td>
+        <td th:text="${fornecedor.documento}"></td>
+        <td th:text="${fornecedor.email}"></td>
+        <td th:text="${fornecedor.telefone}"></td>
+    </tr>
+    <tr th:if="${#lists.isEmpty(fornecedores)}">
+        <td colspan="4" style="text-align: center;">Nenhum fornecedor encontrado.</td>
+    </tr>
+    </tbody>
+</table>
+
+<div class="summary">
+    <p th:text="'Total de Fornecedores Exibidos: ' + ${totalFornecedores}"></p>
+</div>
+
+</body>
+</html>

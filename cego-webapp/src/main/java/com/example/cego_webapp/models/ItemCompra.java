@@ -18,6 +18,8 @@ public class ItemCompra {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // A anotação @ManyToOne já estabelece a relação corretamente.
+    // O 'compra_id' será a chave estrangeira no banco de dados.
     @ManyToOne
     @JoinColumn(name = "compra_id", nullable = false)
     private Compra compra;

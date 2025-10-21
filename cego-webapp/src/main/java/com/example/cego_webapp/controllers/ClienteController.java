@@ -1,8 +1,11 @@
+// src/main/java/com/example/cego_webapp/controllers/ClienteController.java
 package com.example.cego_webapp.controllers;
 
 import com.example.cego_webapp.dto.ClienteDTO;
 import com.example.cego_webapp.models.Cliente;
-import com.example.cego_webapp.repositories.ClienteRepository;
+import com.example.cego_webapp.services.ClienteService;
+import com.example.cego_webapp.services.PdfService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -17,31 +20,30 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @Controller
 @RequestMapping("/clientes")
 public class ClienteController {
+
     @Autowired
-    private ClienteRepository clienteRepository;
+    private ClienteService clienteService;
 
+    @Autowired
+    private PdfService pdfService;
+
+    // ... (get, create e post create continuam iguais) ...
     @GetMapping({"", "/"})
-    public String getClientes(Model model,
-                              @RequestParam(defaultValue = "0") int page,
-                              @RequestParam(defaultValue = "10") int size,
-                              @RequestParam(defaultValue = "id,desc") String sort,
-                              @RequestParam(required = false) String keyword) {
-
+    public String getClientes(Model model, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size, @RequestParam(defaultValue = "id,desc") String sort, @RequestParam(required = false) String keyword) {
         String[] sortParams = sort.split(",");
         String sortField = sortParams[0];
-        Sort.Direction sortDir = sortParams[1].equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Sort.Direction sortDir = sortParams.length > 1 && sortParams[1].equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortDir, sortField));
-
-        Page<Cliente> clientesPage;
-        if (keyword != null && !keyword.isEmpty()) {
-            clientesPage = clienteRepository.findByNomeContainingIgnoreCase(keyword, pageable);
-        } else {
-            clientesPage = clienteRepository.findAll(pageable);
-        }
-
+        Page<Cliente> clientesPage = clienteService.listarClientes(keyword, pageable);
         model.addAttribute("clientesPage", clientesPage);
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", clientesPage.getTotalPages());
@@ -49,112 +51,112 @@ public class ClienteController {
         model.addAttribute("sortDir", sortDir.name().toLowerCase());
         model.addAttribute("keyword", keyword);
         model.addAttribute("activePage", "clientes");
-
         return "clientes/index";
     }
-
     @GetMapping("/create")
-    public String createCliente(Model model) {
-        // Garante que o DTO esteja presente na página, especialmente após um erro de validação
+    public String createClienteForm(Model model) {
         if (!model.containsAttribute("clienteDTO")) {
             model.addAttribute("clienteDTO", new ClienteDTO());
         }
         model.addAttribute("activePage", "clientes");
-
-        // CORREÇÃO: Deve retornar a view de criação, e não a de listagem
         return "clientes/create";
     }
-
     @PostMapping("/create")
-    public String createCliente(@Valid @ModelAttribute("clienteDTO") ClienteDTO clienteDTO,
-                                BindingResult bindingResult,
-                                RedirectAttributes redirectAttributes) {
-
-        String documentoLimpo = clienteDTO.getDocumento() != null ? clienteDTO.getDocumento().replaceAll("[^0-9]", "") : "";
-        if (clienteRepository.findByDocumento(documentoLimpo) != null) {
-            bindingResult.addError(new FieldError("clienteDTO", "documento", "Documento já cadastrado."));
-        }
-
-        if (bindingResult.hasErrors()) {
-            // BOA PRÁTICA: Usar RedirectAttributes para passar os erros e os dados de volta para o formulário
+    public String createCliente(@Valid @ModelAttribute("clienteDTO") ClienteDTO clienteDTO, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
+        try {
+            if (bindingResult.hasErrors()) {
+                redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.clienteDTO", bindingResult);
+                redirectAttributes.addFlashAttribute("clienteDTO", clienteDTO);
+                return "redirect:/clientes/create";
+            }
+            clienteService.criarCliente(clienteDTO);
+            redirectAttributes.addFlashAttribute("successMessage", "Cliente cadastrado com sucesso!");
+            return "redirect:/clientes";
+        } catch (IllegalArgumentException e) {
+            bindingResult.addError(new FieldError("clienteDTO", "documento", e.getMessage()));
             redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.clienteDTO", bindingResult);
             redirectAttributes.addFlashAttribute("clienteDTO", clienteDTO);
             return "redirect:/clientes/create";
         }
-
-        Cliente cliente = new Cliente();
-        cliente.setNome(clienteDTO.getNome());
-        cliente.setDocumento(documentoLimpo);
-        cliente.setEmail(clienteDTO.getEmail());
-        cliente.setTelefone(clienteDTO.getTelefone());
-        cliente.setEndereco(clienteDTO.getEndereco());
-        clienteRepository.save(cliente);
-
-        redirectAttributes.addFlashAttribute("successMessage", "Cliente cadastrado com sucesso!");
-        return "redirect:/clientes";
     }
 
+
+    // ### MÉTODO CORRIGIDO ###
     @GetMapping("/edit")
-    public String editCliente(@RequestParam Integer id, Model model) {
-        Cliente cliente = clienteRepository.findById(id).orElse(null);
-        if (cliente == null) {
+    public String editClienteForm(@RequestParam Integer id, Model model, RedirectAttributes redirectAttributes) {
+        try {
+            Cliente cliente = clienteService.buscarPorId(id);
+            if (!model.containsAttribute("clienteDTO")) {
+                model.addAttribute("clienteDTO", new ClienteDTO(cliente));
+            }
+
+            // CORREÇÃO: Enviar o objeto 'cliente' inteiro para a view
+            model.addAttribute("cliente", cliente);
+
+            model.addAttribute("activePage", "clientes");
+            return "clientes/edit";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
             return "redirect:/clientes";
         }
-
-        ClienteDTO clienteDTO = new ClienteDTO();
-        clienteDTO.setNome(cliente.getNome());
-        clienteDTO.setDocumento(cliente.getDocumento());
-        clienteDTO.setEmail(cliente.getEmail());
-        clienteDTO.setTelefone(cliente.getTelefone());
-        clienteDTO.setEndereco(cliente.getEndereco());
-
-        model.addAttribute("cliente", cliente);
-        model.addAttribute("clienteDTO", clienteDTO);
-        model.addAttribute("activePage", "clientes"); // Para a sidebar
-
-        return "clientes/edit";
     }
 
+    // ... (post edit e delete continuam iguais) ...
     @PostMapping("/edit")
-    public String editCliente(Model model, @RequestParam Integer id, @Valid @ModelAttribute ClienteDTO clienteDTO, BindingResult bindingResult) {
-        Cliente cliente = clienteRepository.findById(id).orElse(null);
-        if (cliente == null) {
+    public String editCliente(@RequestParam Integer id, @Valid @ModelAttribute("clienteDTO") ClienteDTO clienteDTO, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
+        if (bindingResult.hasErrors()) {
+            redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.clienteDTO", bindingResult);
+            redirectAttributes.addFlashAttribute("clienteDTO", clienteDTO);
+            return "redirect:/clientes/edit?id=" + id;
+        }
+        try {
+            clienteService.atualizarCliente(id, clienteDTO);
+            redirectAttributes.addFlashAttribute("successMessage", "Cliente atualizado com sucesso!");
+            return "redirect:/clientes";
+        } catch (IllegalArgumentException e) {
+            bindingResult.addError(new FieldError("clienteDTO", "documento", e.getMessage()));
+            redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.clienteDTO", bindingResult);
+            redirectAttributes.addFlashAttribute("clienteDTO", clienteDTO);
+            return "redirect:/clientes/edit?id=" + id;
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
             return "redirect:/clientes";
         }
-
-        String documentoLimpo = clienteDTO.getDocumento().replaceAll("[^0-9]", "");
-        Cliente existing = clienteRepository.findByDocumento(documentoLimpo);
-        if (existing != null && !existing.getId().equals(id)) {
-            bindingResult.addError(new FieldError("clienteDTO", "documento", "Documento já cadastrado em outro cliente"));
-        }
-
-        model.addAttribute("cliente", cliente);
-        if (bindingResult.hasErrors()) {
-            model.addAttribute("activePage", "clientes"); // Para a sidebar em caso de erro
-            return "clientes/edit";
-        }
-
-        cliente.setNome(clienteDTO.getNome());
-        cliente.setDocumento(documentoLimpo);
-        cliente.setEmail(clienteDTO.getEmail());
-        cliente.setTelefone(clienteDTO.getTelefone());
-        cliente.setEndereco(clienteDTO.getEndereco());
-        clienteRepository.save(cliente);
-
-        return "redirect:/clientes";
     }
 
     @GetMapping("/delete")
     public String deleteCliente(@RequestParam Integer id, RedirectAttributes redirectAttributes) {
         try {
-            Cliente cliente = clienteRepository.findById(id).orElseThrow(null);
-            clienteRepository.delete(cliente);
+            clienteService.deletarCliente(id);
             redirectAttributes.addFlashAttribute("successMessage", "Cliente excluído com sucesso!");
         } catch (DataIntegrityViolationException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Não é possível excluir este cliente, pois ele está associado a outros registros.");
+            // ### A "TRADUÇÃO" DO ERRO ACONTECE AQUI ###
+            // Capturamos o erro específico do banco de dados e criamos uma mensagem amigável.
+            redirectAttributes.addFlashAttribute("errorMessage", "Não é possível excluir este cliente, pois ele está associado a Vendas, Veículos ou Ordens de Serviço.");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Erro ao excluir o cliente.");
+            // Captura qualquer outro erro (como "Não encontrado")
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
         return "redirect:/clientes";
+    }
+
+    @GetMapping("/relatorio/pdf")
+    public void gerarRelatorioPdf(@RequestParam(required = false) String keyword, HttpServletResponse response) throws IOException {
+
+        // CORREÇÃO: Chamar o novo método que retorna a lista COMPLETA
+        List<Cliente> clientes = clienteService.listarTodosParaRelatorio(keyword);
+
+        // O resto do método permanece o mesmo
+        Map<String, Object> variaveis = new HashMap<>();
+        variaveis.put("clientes", clientes);
+        variaveis.put("dataGeracao", LocalDateTime.now());
+
+        variaveis.put("totalClientes", clientes.size());
+
+        byte[] pdfBytes = pdfService.gerarPdfDeHtml("cliente-relatorio.html", variaveis);
+
+        response.setContentType("application/pdf");
+        response.setHeader("Content-Disposition", "attachment; filename=relatorio_clientes.pdf");
+        response.getOutputStream().write(pdfBytes);
     }
 }

@@ -62,10 +62,12 @@
                                 </li>
                                 <li class="list-group-item d-flex justify-content-between">
                                     <strong>Pagamento:</strong>
-                                    <span th:if="${os.contaReceber == null}" class="badge bg-light text-dark">N/A</span>
-                                    <span th:if="${os.contaReceber?.status.name() == 'PENDENTE'}" class="badge bg-warning">Aguardando</span>
-                                    <span th:if="${os.contaReceber?.status.name() == 'RECEBIDA'}" class="badge bg-success">Pago</span>
-                                    <span th:if="${os.contaReceber?.status.name() == 'CANCELADA'}" class="badge bg-secondary">Cancelado</span>
+                                    <th:block th:switch="${os.contaReceber?.status}">
+                                        <span th:case="${T(com.example.cego_webapp.models.ContaReceberStatus).PENDENTE}" class="badge bg-warning">Aguardando</span>
+                                        <span th:case="${T(com.example.cego_webapp.models.ContaReceberStatus).RECEBIDA}" class="badge bg-success">Pago</span>
+                                        <span th:case="${T(com.example.cego_webapp.models.ContaReceberStatus).CANCELADA}" class="badge bg-secondary">Cancelado</span>
+                                        <span th:case="*" class="badge bg-light text-dark">N/A</span>
+                                    </th:block>
                                 </li>
                                 <li class="list-group-item d-flex justify-content-between">
                                     <strong>Valor Total:</strong>

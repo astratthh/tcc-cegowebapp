@@ -29,6 +29,9 @@
     <div th:replace="~{fragments/sidebar :: sidebar}"></div>
     <div class="content-wrapper">
         <main>
+            <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+            <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+
             <div class="row mb-4">
                 <div class="col-md-4"><div class="card text-bg-warning"><div class="card-body"><h6 class="card-title">TOTAL A PAGAR</h6><h4 class="fw-bold" th:text="${#numbers.formatCurrency(totalAPagar)}"></h4></div></div></div>
                 <div class="col-md-4"><div class="card text-bg-danger"><div class="card-body"><h6 class="card-title">TOTAL VENCIDO</h6><h4 class="fw-bold" th:text="${#numbers.formatCurrency(totalVencido)}"></h4></div></div></div>
@@ -43,24 +46,24 @@
                             <label for="fornecedorId" class="form-label visually-hidden">Fornecedor</label>
                             <select name="fornecedorId" id="fornecedorId" class="form-select">
                                 <option value="">Todos os Fornecedores</option>
-                                <option th:each="f : ${fornecedores}" th:value="${f.id}" th:text="${f.nome}" th:selected="${f.id.toString() == param.fornecedorId}"></option>
+                                <option th:each="f : ${fornecedores}" th:value="${f.id}" th:text="${f.nome}" th:selected="${f.id == paramFornecedorId}"></option>
                             </select>
                         </div>
                         <div class="col-md-2">
                             <label for="dataInicio" class="form-label visually-hidden">Venc. Início</label>
-                            <input type="date" name="dataInicio" id="dataInicio" class="form-control" th:value="${param.dataInicio}">
+                            <input type="date" name="dataInicio" id="dataInicio" class="form-control" th:value="${paramDataInicio}">
                         </div>
                         <div class="col-md-2">
                             <label for="dataFim" class="form-label visually-hidden">Venc. Fim</label>
-                            <input type="date" name="dataFim" id="dataFim" class="form-control" th:value="${param.dataFim}">
+                            <input type="date" name="dataFim" id="dataFim" class="form-control" th:value="${paramDataFim}">
                         </div>
                         <div class="col-md-3">
                             <label for="status" class="form-label visually-hidden">Status</label>
                             <select name="status" id="status" class="form-select">
                                 <option value="">Todos os Status</option>
-                                <option value="A_PAGAR" th:selected="${param.status == 'A_PAGAR'}">A Pagar</option>
-                                <option value="PAGA" th:selected="${param.status == 'PAGA'}">Paga</option>
-                                <option value="CANCELADA" th:selected="${param.status == 'CANCELADA'}">Cancelada</option>
+                                <option value="A_PAGAR" th:selected="${paramStatus == 'A_PAGAR'}">A Pagar</option>
+                                <option value="PAGA" th:selected="${paramStatus == 'PAGA'}">Paga</option>
+                                <option value="CANCELADA" th:selected="${paramStatus == 'CANCELADA'}">Cancelada</option>
                             </select>
                         </div>
                         <div class="col-md-2 d-grid">
@@ -70,7 +73,16 @@
                 </div>
                 <div class="table-responsive">
                     <table class="table table-hover table-borderless-outside mb-0">
-                        <thead><tr><th class="ps-4">Compra ID</th><th>Fornecedor</th><th>Vencimento</th><th>Valor</th><th>Status</th><th class="text-end pe-4">Ações</th></tr></thead>
+                        <thead>
+                        <tr>
+                            <th class="ps-4">Compra ID</th>
+                            <th>Fornecedor</th>
+                            <th>Vencimento</th>
+                            <th>Valor</th>
+                            <th>Status</th>
+                            <th>Forma Pag.</th> <th class="text-end pe-4">Ações</th>
+                        </tr>
+                        </thead>
                         <tbody class="table-group-divider">
                         <tr th:each="conta : ${contasPage.content}"
                             th:classappend="${conta.status.name() == 'PAGA' ? 'table-success-subtle' : (conta.status.name() == 'A_PAGAR' and conta.dataVencimento.isBefore(T(java.time.LocalDate).now()) ? 'table-danger-subtle' : (conta.status.name() == 'CANCELADA' ? 'text-muted' : ''))}">
@@ -84,13 +96,21 @@
                                 <span th:if="${conta.status.name() == 'PAGA'}" class="badge rounded-pill bg-success-subtle text-success-emphasis">Paga</span>
                                 <span th:if="${conta.status.name() == 'CANCELADA'}" class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis">Cancelada</span>
                             </td>
+                            <td th:text="${conta.formaPagamento} ? ${conta.formaPagamento.descricao} : '-'"></td>
                             <td class="text-end pe-4">
-                                <a th:if="${conta.status.name() == 'A_PAGAR'}" th:href="@{/contas-a-pagar/confirmar-pagamento(id=${conta.id})}" class="btn btn-sm btn-info btn-confirm-payment text-white" data-bs-toggle="tooltip" title="Confirmar Pagamento"><i class="bi bi-cash-stack me-1"></i> Pagar</a>
+                                <button th:if="${conta.status.name() == 'A_PAGAR'}"
+                                        type="button" class="btn btn-sm btn-info text-white btn-pagar"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#pagamentoModalPagar"
+                                        th:data-conta-id="${conta.id}"
+                                        th:data-conta-valor="${#numbers.formatCurrency(conta.valor)}"
+                                        data-bs-tooltip="tooltip" title="Confirmar Pagamento">
+                                    <i class="bi bi-cash-stack me-1"></i> Pagar
+                                </button>
                             </td>
                         </tr>
                         <tr th:if="${contasPage.empty}">
-                            <td colspan="6" class="text-center text-muted p-4">Nenhuma conta encontrada para os filtros selecionados.</td>
-                        </tr>
+                            <td colspan="7" class="text-center text-muted p-4">Nenhuma conta encontrada para os filtros selecionados.</td> </tr>
                         </tbody>
                     </table>
                 </div>
@@ -98,13 +118,13 @@
                     <nav aria-label="Navegação de páginas">
                         <ul class="pagination justify-content-center">
                             <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
-                                <a class="page-link" th:href="@{/contas-a-pagar(page=${currentPage - 1}, size=${contasPage.size}, status=${param.status}, fornecedorId=${param.fornecedorId}, dataInicio=${param.dataInicio}, dataFim=${param.dataFim})}">Anterior</a>
+                                <a class="page-link" th:href="@{/contas-a-pagar(page=${currentPage - 1}, size=${contasPage.size}, status=${paramStatus}, fornecedorId=${paramFornecedorId}, dataInicio=${paramDataInicio}, dataFim=${paramDataFim})}">Anterior</a>
                             </li>
                             <li class="page-item" th:each="i : ${#numbers.sequence(0, contasPage.totalPages - 1)}" th:classappend="${i == currentPage} ? 'active'">
-                                <a class="page-link" th:href="@{/contas-a-pagar(page=${i}, size=${contasPage.size}, status=${param.status}, fornecedorId=${param.fornecedorId}, dataInicio=${param.dataInicio}, dataFim=${param.dataFim})}" th:text="${i + 1}"></a>
+                                <a class="page-link" th:href="@{/contas-a-pagar(page=${i}, size=${contasPage.size}, status=${paramStatus}, fornecedorId=${paramFornecedorId}, dataInicio=${paramDataInicio}, dataFim=${paramDataFim})}" th:text="${i + 1}"></a>
                             </li>
                             <li class="page-item" th:classappend="${currentPage + 1 >= contasPage.totalPages} ? 'disabled'">
-                                <a class="page-link" th:href="@{/contas-a-pagar(page=${currentPage + 1}, size=${contasPage.size}, status=${param.status}, fornecedorId=${param.fornecedorId}, dataInicio=${param.dataInicio}, dataFim=${param.dataFim})}">Próxima</a>
+                                <a class="page-link" th:href="@{/contas-a-pagar(page=${currentPage + 1}, size=${contasPage.size}, status=${paramStatus}, fornecedorId=${paramFornecedorId}, dataInicio=${paramDataInicio}, dataFim=${paramDataFim})}">Próxima</a>
                             </li>
                         </ul>
                     </nav>
@@ -114,12 +134,42 @@
     </div>
 </div>
 
+<div class="modal fade" id="pagamentoModalPagar" tabindex="-1" aria-labelledby="pagamentoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form th:action="@{/contas-a-pagar/pagar}" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="pagamentoModalLabel">Confirmar Pagamento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Confirmar o pagamento da conta no valor de <strong id="modalValorContaPagar"></strong>?</p>
+                    <input type="hidden" name="id" id="modalContaIdPagar">
+                    <div class="mb-3">
+                        <label for="formaPagamentoPagar" class="form-label">Forma de Pagamento:</label>
+                        <select class="form-select" id="formaPagamentoPagar" name="formaPagamento" required>
+                            <option value="">Selecione...</option>
+                            <option th:each="forma : ${T(com.example.cego_webapp.models.FormaPagamento).values()}"
+                                    th:value="${forma.name()}"
+                                    th:text="${forma.descricao}"></option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-info text-white">Confirmar Pagamento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
-    // Inicializa o Select2 para o filtro de fornecedor
+    // Inicializa o Select2
     $(document).ready(function() {
         $('#fornecedorId').select2({
             theme: "bootstrap-5",
@@ -127,28 +177,27 @@
         });
     });
 
+    // Ativa os tooltips
     const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
     [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
 
-    document.querySelectorAll('.btn-confirm-payment').forEach(button => {
-        button.addEventListener('click', function (e) {
-            e.preventDefault();
-            Swal.fire({
-                title: 'Confirmar Pagamento?',
-                text: "Esta ação marcará a conta como 'Paga' e não poderá ser desfeita.",
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#0D6EFD', // Azul para combinar com o botão "Pagar"
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Sim, confirmar!',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = this.getAttribute('href');
-                }
-            });
+    // ### SCRIPT PARA O MODAL ###
+    const pagamentoModalPagar = document.getElementById('pagamentoModalPagar');
+    if (pagamentoModalPagar) { // Garante que o modal existe
+        pagamentoModalPagar.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const contaId = button.getAttribute('data-conta-id');
+            const contaValor = button.getAttribute('data-conta-valor');
+            // Atualiza os campos do modal
+            pagamentoModalPagar.querySelector('#modalValorContaPagar').textContent = contaValor;
+            pagamentoModalPagar.querySelector('#modalContaIdPagar').value = contaId;
+            // Limpa a seleção anterior da forma de pagamento
+            pagamentoModalPagar.querySelector('#formaPagamentoPagar').selectedIndex = 0;
         });
-    });
+    }
+
+    // Script de confirmação do SweetAlert NÃO É MAIS NECESSÁRIO AQUI
+    // pois o modal já serve como confirmação visual.
 </script>
 </body>
 </html>

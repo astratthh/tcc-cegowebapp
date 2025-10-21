@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -16,27 +17,26 @@ public class Venda {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne // Muitas vendas para um cliente
+    @ManyToOne
     @JoinColumn(name = "cliente_id", nullable = false)
     private Cliente cliente;
 
     @Column(nullable = false)
     private LocalDateTime dataHora;
 
+    // ### CAMPO ADICIONADO AQUI ###
+    private LocalDateTime dataCancelamento;
+
     @Column(nullable = false)
     private BigDecimal valorTotal;
 
-    // Uma venda tem muitos itens.
-    // CascadeType.ALL: Salvar, atualizar ou deletar a Venda irá refletir nos Itens.
-    // orphanRemoval = true: Se um ItemVenda for removido da lista, ele será deletado do banco.
     @OneToMany(mappedBy = "venda", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ItemVenda> itens;
+    private List<ItemVenda> itens = new ArrayList<>();
 
-    @Enumerated(EnumType.STRING) // Salva o nome do status ("REALIZADA", "CANCELADA") no banco
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private VendaStatus status;
 
     @OneToOne(mappedBy = "venda", cascade = CascadeType.ALL, orphanRemoval = true)
     private ContaReceber contaReceber;
-
 }

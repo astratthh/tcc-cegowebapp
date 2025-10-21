@@ -10,7 +10,13 @@ import java.util.List;
 
 @Repository
 public interface FornecedorRepository extends JpaRepository<Fornecedor, Integer> {
-    List<Fornecedor> findByNomeContainingIgnoreCase(String term);
-    Fornecedor findByDocumento(String documento);
+
+    // Método para a paginação (já existe)
     Page<Fornecedor> findByNomeContainingIgnoreCase(String keyword, Pageable pageable);
+
+    Fornecedor findByDocumento(String documento);
+
+    // ### NOVO MÉTODO PARA O RELATÓRIO ###
+    // Retorna uma LISTA completa, não uma página.
+    List<Fornecedor> findAllByNomeContainingIgnoreCase(String nome);
 }

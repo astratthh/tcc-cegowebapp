@@ -23,10 +23,13 @@
   <div th:replace="~{fragments/sidebar :: sidebar}"></div>
   <div class="content-wrapper">
     <main>
+      <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+      <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+
       <div class="row mb-4">
-        <div class="col-md-4"><div class="card text-bg-warning"><div class="card-body"><h6 class="card-title">TOTAL PENDENTE</h6><h4 class="fw-bold" th:text="${totalPendente != null ? #numbers.formatCurrency(totalPendente) : 'R$ 0,00'}">R$ 0,00</h4></div></div></div>
-        <div class="col-md-4"><div class="card text-bg-danger"><div class="card-body"><h6 class="card-title">TOTAL ATRASADO</h6><h4 class="fw-bold" th:text="${totalAtrasado != null ? #numbers.formatCurrency(totalAtrasado) : 'R$ 0,00'}">R$ 0,00</h4></div></div></div>
-        <div class="col-md-4"><div class="card text-bg-success"><div class="card-body"><h6 class="card-title">RECEBIDO ESTE MÊS</h6><h4 class="fw-bold" th:text="${totalRecebidoMes != null ? #numbers.formatCurrency(totalRecebidoMes) : 'R$ 0,00'}">R$ 0,00</h4></div></div></div>
+        <div class="col-md-4"><div class="card text-bg-warning"><div class="card-body"><h6 class="card-title">TOTAL PENDENTE</h6><h4 class="fw-bold" th:text="${#numbers.formatCurrency(totalPendente)}"></h4></div></div></div>
+        <div class="col-md-4"><div class="card text-bg-danger"><div class="card-body"><h6 class="card-title">TOTAL ATRASADO</h6><h4 class="fw-bold" th:text="${#numbers.formatCurrency(totalAtrasado)}"></h4></div></div></div>
+        <div class="col-md-4"><div class="card text-bg-success"><div class="card-body"><h6 class="card-title">RECEBIDO ESTE MÊS</h6><h4 class="fw-bold" th:text="${#numbers.formatCurrency(totalRecebidoMes)}"></h4></div></div></div>
       </div>
 
       <div class="card shadow-sm border-0">
@@ -44,48 +47,53 @@
             <div class="col-md-2">
               <select name="origem" class="form-select">
                 <option value="">Todas as Origens</option>
-                <option value="VENDA" th:selected="${paramOrigem == 'VENDA'}">Vendas</option>
-                <option value="OS" th:selected="${paramOrigem == 'OS'}">Ordens de Serviço</option>
-              </select>
+                <option value="VENDA" th:selected="${paramOrigem == 'VENDA'}">Vendas</option> <option value="OS" th:selected="${paramOrigem == 'OS'}">Ordens de Serviço</option> </select>
             </div>
             <div class="col-md-2">
               <select name="status" class="form-select">
                 <option value="">Todos os Status</option>
-                <option value="PENDENTE" th:selected="${paramStatus == 'PENDENTE'}">Pendente</option>
-                <option value="RECEBIDA" th:selected="${paramStatus == 'RECEBIDA'}">Recebida</option>
-                <option value="CANCELADA" th:selected="${paramStatus == 'CANCELADA'}">Cancelada</option>
-              </select>
+                <option value="PENDENTE" th:selected="${paramStatus == 'PENDENTE'}">Pendente</option> <option value="RECEBIDA" th:selected="${paramStatus == 'RECEBIDA'}">Recebida</option> <option value="CANCELADA" th:selected="${paramStatus == 'CANCELADA'}">Cancelada</option> </select>
             </div>
             <div class="col-md-1 d-grid"><button type="submit" class="btn btn-primary">Filtrar</button></div>
           </form>
         </div>
         <div class="table-responsive">
           <table class="table table-hover mb-0">
-            <thead><tr><th class="ps-4">Origem</th><th>Cliente</th><th>Vencimento</th><th>Valor</th><th>Status</th><th class="text-end pe-4">Ações</th></tr></thead>
+            <thead>
+            <tr>
+              <th class="ps-4">Origem</th>
+              <th>Cliente</th>
+              <th>Vencimento</th>
+              <th>Valor</th>
+              <th>Status</th>
+              <th>Forma Pag.</th> <th class="text-end pe-4">Ações</th>
+            </tr>
+            </thead>
             <tbody>
             <tr th:each="conta : ${contasPage.content}">
               <td class="ps-4">
                 <div th:if="${conta.venda != null}"><span class="fw-bold" th:text="'Venda #' + ${conta.venda.id}"></span></div>
                 <div th:if="${conta.ordemServico != null}"><span class="fw-bold" th:text="'OS #' + ${conta.ordemServico.id}"></span></div>
               </td>
-              <td>
-                <div th:if="${conta.venda != null}" th:text="${conta.venda.cliente.nome}"></div>
-                <div th:if="${conta.ordemServico != null}" th:text="${conta.ordemServico.cliente.nome}"></div>
-              </td>
+              <td th:text="${conta.getClienteNome()}"></td>
               <td th:text="${#temporals.format(conta.dataVencimento, 'dd/MM/yyyy')}"></td>
               <td class="fw-semibold" th:text="${#numbers.formatCurrency(conta.valor)}"></td>
               <td>
-                <span th:if="${conta.status == T(com.example.cego_webapp.models.ContaReceberStatus).PENDENTE and conta.dataVencimento.isBefore(T(java.time.LocalDate).now())}" class="badge rounded-pill bg-danger-subtle text-danger-emphasis">Atrasado</span>
-                <span th:if="${conta.status == T(com.example.cego_webapp.models.ContaReceberStatus).PENDENTE and !conta.dataVencimento.isBefore(T(java.time.LocalDate).now())}" class="badge rounded-pill bg-warning-subtle text-warning-emphasis">Pendente</span>
-                <span th:if="${conta.status == T(com.example.cego_webapp.models.ContaReceberStatus).RECEBIDA}" class="badge rounded-pill bg-success-subtle text-success-emphasis">Recebida</span>
-                <span th:if="${conta.status == T(com.example.cego_webapp.models.ContaReceberStatus).CANCELADA}" class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis">Cancelada</span>
+                <span th:if="${conta.status.name() == 'PENDENTE' and conta.dataVencimento.isBefore(T(java.time.LocalDate).now())}" class="badge rounded-pill bg-danger-subtle text-danger-emphasis">Atrasado</span>
+                <span th:if="${conta.status.name() == 'PENDENTE' and !conta.dataVencimento.isBefore(T(java.time.LocalDate).now())}" class="badge rounded-pill bg-warning-subtle text-warning-emphasis">Pendente</span>
+                <span th:if="${conta.status.name() == 'RECEBIDA'}" class="badge rounded-pill bg-success-subtle text-success-emphasis">Recebida</span>
+                <span th:if="${conta.status.name() == 'CANCELADA'}" class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis">Cancelada</span>
               </td>
+              <td th:text="${conta.formaPagamento} ? ${conta.formaPagamento.descricao} : '-'"></td>
               <td class="text-end pe-4">
-                <a th:if="${conta.status == T(com.example.cego_webapp.models.ContaReceberStatus).PENDENTE}" th:href="@{/contas-a-receber/confirmar-pagamento(id=${conta.id})}" class="btn btn-sm btn-success btn-confirm-payment"><i class="bi bi-check-circle-fill me-1"></i> Confirmar</a>
+                <button th:if="${conta.status.name() == 'PENDENTE'}" type="button" class="btn btn-sm btn-success btn-pagar"
+                        data-bs-toggle="modal" data-bs-target="#pagamentoModal"
+                        th:data-conta-id="${conta.id}" th:data-conta-valor="${#numbers.formatCurrency(conta.valor)}">
+                  <i class="bi bi-check-circle-fill me-1"></i> Receber
+                </button>
               </td>
             </tr>
-            <tr th:if="${contasPage.empty}"><td colspan="6" class="text-center text-muted p-4">Nenhuma conta encontrada para os filtros selecionados.</td></tr>
-            </tbody>
+            <tr th:if="${contasPage.empty}"><td colspan="7" class="text-center text-muted p-4">Nenhuma conta encontrada para os filtros selecionados.</td></tr> </tbody>
           </table>
         </div>
         <div class="card-footer bg-white pt-3" th:if="${contasPage.totalPages > 1}">
@@ -98,8 +106,7 @@
                 <a class="page-link" th:href="@{/contas-a-receber(page=${i}, size=${contasPage.size}, status=${paramStatus}, clienteId=${paramClienteId}, dataInicio=${paramDataInicio}, dataFim=${paramDataFim}, origem=${paramOrigem})}" th:text="${i + 1}"></a>
               </li>
               <li class="page-item" th:classappend="${currentPage + 1 >= contasPage.totalPages} ? 'disabled'">
-                <a class="page-link" th:href="@{/contas-a-receber(page=${currentPage + 1}, size=${contasPage.size}, status=${paramStatus}, clienteId=${paramClienteId}, dataInicio=${paramDataInicio}, dataFim=${paramDataFim}, origem=${paramOrigem})}">Próxima</a>
-              </li>
+                <a class="page-link" th:href="@{/contas-a-receber(page=${currentPage + 1}, size=${contasPage.size}, status=${paramStatus}, clienteId=${paramClienteId}, dataInicio=${paramDataInicio}, dataFim=${paramDataFim}, origem=${paramOrigem})}">Próxima</a> </li>
             </ul>
           </nav>
         </div>
@@ -108,20 +115,66 @@
   </div>
 </div>
 
+<div class="modal fade" id="pagamentoModal" tabindex="-1" aria-labelledby="pagamentoModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <form th:action="@{/contas-a-receber/pagar}" method="post">
+        <div class="modal-header">
+          <h5 class="modal-title" id="pagamentoModalLabel">Confirmar Recebimento</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Você está confirmando o recebimento da conta no valor de <strong id="modalValorConta"></strong>.</p>
+          <input type="hidden" name="id" id="modalContaId">
+
+          <div class="mb-3">
+            <label for="formaPagamento" class="form-label">Forma de Pagamento:</label>
+            <select class="form-select" id="formaPagamento" name="formaPagamento" required>
+              <option value="">Selecione...</option>
+              <option th:each="forma : ${T(com.example.cego_webapp.models.FormaPagamento).values()}"
+                      th:value="${forma.name()}"
+                      th:text="${forma.descricao}"></option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-success">Confirmar Recebimento</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
+  // Inicializa Select2
   $(document).ready(function() {
     $('#clienteId').select2({
       theme: "bootstrap-5",
       placeholder: "Todos os Clientes"
     });
   });
-  document.querySelectorAll('.btn-confirm-payment').forEach(button => {
-    button.addEventListener('click', function (e) { /* ... seu código sweetalert ... */ });
-  });
+
+  // ### SCRIPT PARA O MODAL ###
+  const pagamentoModal = document.getElementById('pagamentoModal');
+  if (pagamentoModal) {
+    pagamentoModal.addEventListener('show.bs.modal', function (event) {
+      const button = event.relatedTarget;
+      const contaId = button.getAttribute('data-conta-id');
+      const contaValor = button.getAttribute('data-conta-valor');
+      // Atualiza os campos do modal
+      pagamentoModal.querySelector('#modalValorConta').textContent = contaValor;
+      pagamentoModal.querySelector('#modalContaId').value = contaId;
+      // Limpa a seleção anterior
+      pagamentoModal.querySelector('#formaPagamento').selectedIndex = 0;
+    });
+  }
+
+  // O SweetAlert não é mais necessário aqui para a confirmação de pagamento
 </script>
 </body>
 </html>

@@ -36,4 +36,19 @@ public class ContaReceber {
     @JoinColumn(name = "ordem_servico_id", unique = true)
     private OrdemServico ordemServico;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "forma_pagamento") // Define o nome da coluna no banco
+    private FormaPagamento formaPagamento;
+
+    @Transient
+    public String getClienteNome() {
+        if (this.venda != null && this.venda.getCliente() != null) {
+            return this.venda.getCliente().getNome();
+        }
+        if (this.ordemServico != null && this.ordemServico.getCliente() != null) {
+            return this.ordemServico.getCliente().getNome();
+        }
+        return "N/A"; // Retorno padrão caso não haja cliente
+    }
+
 }

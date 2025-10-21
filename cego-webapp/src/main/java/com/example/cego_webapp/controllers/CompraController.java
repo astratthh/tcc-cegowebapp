@@ -1,13 +1,12 @@
+// src/main/java/com/example/cego_webapp/controllers/CompraController.java
 package com.example.cego_webapp.controllers;
 
 import com.example.cego_webapp.dto.CompraDTO;
 import com.example.cego_webapp.models.*;
-import com.example.cego_webapp.repositories.CompraRepository;
-import com.example.cego_webapp.repositories.ContaPagarRepository; // NOVO IMPORT
+import com.example.cego_webapp.repositories.ContaPagarRepository;
 import com.example.cego_webapp.repositories.FornecedorRepository;
 import com.example.cego_webapp.repositories.ProdutoRepository;
-import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
+import com.example.cego_webapp.services.CompraService; // NOVO IMPORT
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -19,43 +18,34 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
 import java.math.BigDecimal;
-import java.time.LocalDate; // NOVO IMPORT
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.time.LocalDate;
 
 @Controller
 @RequestMapping("/compras")
 public class CompraController {
 
-    @Autowired private CompraRepository compraRepository;
+    @Autowired private CompraService compraService;
+    @Autowired private ContaPagarRepository contaPagarRepository; // Para o dashboard
     @Autowired private FornecedorRepository fornecedorRepository;
     @Autowired private ProdutoRepository produtoRepository;
-    @Autowired private ContaPagarRepository contaPagarRepository; // NOVO: Injetando o repositório
 
     @GetMapping({"", "/"})
-    public String index(Model model,
-                        @RequestParam(defaultValue = "0") int page,
-                        @RequestParam(defaultValue = "10") int size) {
+    public String index(Model model, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "dataCompra"));
-        Page<Compra> comprasPage = compraRepository.findAll(pageable);
+        Page<Compra> comprasPage = compraService.listarCompras(pageable);
         model.addAttribute("comprasPage", comprasPage);
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", comprasPage.getTotalPages());
-
-        // MUDANÇA: Adicionando dados para o novo Dashboard de Compras
         model.addAttribute("totalAPagar", contaPagarRepository.findTotalAPagar().orElse(BigDecimal.ZERO));
         model.addAttribute("totalVencido", contaPagarRepository.findTotalVencido().orElse(BigDecimal.ZERO));
         model.addAttribute("totalPagoMes", contaPagarRepository.findTotalPagoNoMes(LocalDate.now().withDayOfMonth(1)).orElse(BigDecimal.ZERO));
-
         model.addAttribute("activePage", "compras");
         return "compras/index";
     }
 
     @GetMapping("/create")
-    public String createCompra(Model model) {
+    public String createCompraForm(Model model) {
         if (!model.containsAttribute("compraDTO")) {
             model.addAttribute("compraDTO", new CompraDTO());
         }
@@ -66,89 +56,75 @@ public class CompraController {
     }
 
     @PostMapping("/create")
-    public String createCompra(@Valid @ModelAttribute CompraDTO compraDTO, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
+    public String createCompra(@Valid @ModelAttribute("compraDTO") CompraDTO compraDTO, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.compraDTO", bindingResult);
             redirectAttributes.addFlashAttribute("compraDTO", compraDTO);
             return "redirect:/compras/create";
         }
         try {
-            Fornecedor fornecedor = fornecedorRepository.findById(compraDTO.getFornecedorId())
-                    .orElseThrow(() -> new IllegalArgumentException("Fornecedor inválido"));
-            Compra compra = new Compra();
-            compra.setFornecedor(fornecedor);
-            compra.setDataCompra(LocalDateTime.now());
-            compra.setStatus(CompraStatus.FINALIZADA);
-            BigDecimal totalCompra = BigDecimal.ZERO;
-            List<ItemCompra> itensCompra = new ArrayList<>();
-            for (var itemDTO : compraDTO.getItens()) {
-                Produto produto = produtoRepository.findById(itemDTO.getProdutoId())
-                        .orElseThrow(() -> new IllegalArgumentException("Produto inválido"));
-                produto.setEstoque(produto.getEstoque() + itemDTO.getQuantidade());
-                produtoRepository.save(produto);
-                ItemCompra itemCompra = new ItemCompra();
-                itemCompra.setCompra(compra);
-                itemCompra.setProduto(produto);
-                itemCompra.setQuantidade(itemDTO.getQuantidade());
-                itemCompra.setCustoUnitario(itemDTO.getCustoUnitario());
-                itensCompra.add(itemCompra);
-                totalCompra = totalCompra.add(itemDTO.getCustoUnitario().multiply(new BigDecimal(itemDTO.getQuantidade())));
-            }
-            compra.setItens(itensCompra);
-            compra.setValorTotal(totalCompra);
-            ContaPagar contaPagar = new ContaPagar();
-            contaPagar.setCompra(compra);
-            contaPagar.setValor(totalCompra);
-            contaPagar.setDataVencimento(compraDTO.getDataVencimento());
-            contaPagar.setStatus(ContaPagarStatus.A_PAGAR);
-            compra.setContaPagar(contaPagar);
-            compraRepository.save(compra);
-            redirectAttributes.addFlashAttribute("successMessage", "Compra #" + compra.getId() + " registrada com sucesso!");
+            Compra novaCompra = compraService.criarCompra(compraDTO);
+            redirectAttributes.addFlashAttribute("successMessage", "Compra #" + novaCompra.getId() + " registrada com sucesso!");
+            return "redirect:/compras";
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Erro ao registrar a compra: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("compraDTO", compraDTO);
             return "redirect:/compras/create";
         }
-        return "redirect:/compras";
     }
 
-    @Transactional
+    @GetMapping("/edit/{id}")
+    public String showEditForm(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
+        try {
+            Compra compra = compraService.buscarPorId(id);
+            if (compra.getContaPagar() == null || compra.getContaPagar().getStatus() != ContaPagarStatus.A_PAGAR) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Compras pagas ou canceladas não podem ser editadas.");
+                return "redirect:/compras";
+            }
+
+            // Cria o DTO a partir da entidade para popular o formulário
+            if (!model.containsAttribute("compraDTO")) {
+                model.addAttribute("compraDTO", new CompraDTO(compra));
+            }
+
+            // Envia o objeto 'compra' para a tela (para usar o ID no título)
+            model.addAttribute("compra", compra);
+
+            // Envia as listas completas para os dropdowns e para o JavaScript
+            model.addAttribute("fornecedores", fornecedorRepository.findAll(Sort.by("nome")));
+            model.addAttribute("produtos", produtoRepository.findAll(Sort.by("nome")));
+
+            return "compras/edit";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:/compras";
+        }
+    }
+
+    @PostMapping("/edit/{id}")
+    public String updateCompra(@PathVariable Long id, @Valid @ModelAttribute("compraDTO") CompraDTO compraDTO,
+                               BindingResult bindingResult, RedirectAttributes redirectAttributes) {
+        if (bindingResult.hasErrors()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Verifique os campos obrigatórios.");
+            redirectAttributes.addFlashAttribute("compraDTO", compraDTO);
+            return "redirect:/compras/edit/" + id;
+        }
+        try {
+            compraService.atualizarCompra(id, compraDTO);
+            redirectAttributes.addFlashAttribute("successMessage", "Compra #" + id + " atualizada com sucesso!");
+            return "redirect:/compras";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Erro ao atualizar a compra: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("compraDTO", compraDTO);
+            return "redirect:/compras/edit/" + id;
+        }
+    }
+
     @GetMapping("/cancelar")
     public String cancelarCompra(@RequestParam Long id, RedirectAttributes redirectAttributes) {
         try {
-            Compra compra = compraRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Compra não encontrada!"));
-
-            if (compra.getStatus() != CompraStatus.FINALIZADA) {
-                redirectAttributes.addFlashAttribute("errorMessage", "Esta compra não pode ser cancelada.");
-                return "redirect:/compras";
-            }
-            if (compra.getContaPagar() != null && compra.getContaPagar().getStatus() == ContaPagarStatus.PAGA) {
-                redirectAttributes.addFlashAttribute("errorMessage", "Não é possível cancelar uma compra que já foi paga.");
-                return "redirect:/compras";
-            }
-
-            for (ItemCompra item : compra.getItens()) {
-                Produto produto = item.getProduto();
-                if (produto.getEstoque() < item.getQuantidade()) {
-                    redirectAttributes.addFlashAttribute("errorMessage", "Cancelamento bloqueado: o produto '" + produto.getNome() + "' não tem estoque suficiente para a devolução.");
-                    return "redirect:/compras";
-                }
-            }
-
-            for (ItemCompra item : compra.getItens()) {
-                Produto produto = item.getProduto();
-                produto.setEstoque(produto.getEstoque() - item.getQuantidade());
-                produtoRepository.save(produto);
-            }
-
-            compra.setStatus(CompraStatus.CANCELADA);
-            compra.setDataCancelamento(LocalDateTime.now());
-            if (compra.getContaPagar() != null) {
-                compra.getContaPagar().setStatus(ContaPagarStatus.CANCELADA);
-            }
-
-            compraRepository.save(compra);
+            compraService.cancelarCompra(id);
             redirectAttributes.addFlashAttribute("successMessage", "Compra #" + id + " cancelada e estoque ajustado com sucesso!");
-
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Erro ao cancelar a compra: " + e.getMessage());
         }

@@ -8,6 +8,7 @@ public enum StatusOrdemServico {
     PENDENTE("Pendente"),
     EM_ANDAMENTO("Em Andamento"),
     FINALIZADA("Finalizada"),
+    PAGA("Paga"),
     CANCELADA("Cancelada");
 
     private final String descricao;

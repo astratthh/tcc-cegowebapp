@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
 <body>
 
@@ -19,8 +19,8 @@
     <ul class="nav nav-pills flex-column mb-auto">
 
         <li class="nav-item">
-            <a th:href="@{/}" class="nav-link text-white d-flex align-items-center gap-2">
-                <i class="bi bi-house-door-fill"></i>
+            <a th:href="@{/}" class="nav-link text-white d-flex align-items-center gap-2"
+               th:classappend="${activePage == 'home'} ? 'active'"> <i class="bi bi-house-door-fill"></i>
                 Home
             </a>
         </li>
@@ -34,12 +34,12 @@
             </div>
             <div>
                 <ul class="nav nav-pills flex-column mt-2 ps-4">
-                    <li><a th:href="@{/clientes}" class="nav-link text-white">Clientes</a></li>
-                    <li><a th:href="@{/funcionarios}" class="nav-link text-white">Funcionários</a></li>
-                    <li><a th:href="@{/fornecedores}" class="nav-link text-white">Fornecedores</a></li>
-                    <li><a th:href="@{/veiculos}" class="nav-link text-white">Veículos</a></li>
-                    <li><a th:href="@{/produtos}" class="nav-link text-white">Produtos</a></li>
-                    <li><a th:href="@{/servicos}" class="nav-link text-white">Serviços</a></li>
+                    <li><a th:href="@{/clientes}" class="nav-link text-white" th:classappend="${activePage == 'clientes'} ? 'active'">Clientes</a></li>
+                    <li><a th:href="@{/funcionarios}" class="nav-link text-white" th:classappend="${activePage == 'funcionarios'} ? 'active'">Funcionários</a></li>
+                    <li><a th:href="@{/fornecedores}" class="nav-link text-white" th:classappend="${activePage == 'fornecedores'} ? 'active'">Fornecedores</a></li>
+                    <li><a th:href="@{/veiculos}" class="nav-link text-white" th:classappend="${activePage == 'veiculos'} ? 'active'">Veículos</a></li>
+                    <li><a th:href="@{/produtos}" class="nav-link text-white" th:classappend="${activePage == 'produtos'} ? 'active'">Produtos</a></li>
+                    <li><a th:href="@{/servicos}" class="nav-link text-white" th:classappend="${activePage == 'servicos'} ? 'active'">Serviços</a></li>
                 </ul>
             </div>
         </li>
@@ -51,24 +51,37 @@
             </div>
             <div>
                 <ul class="nav nav-pills flex-column mt-2 ps-4">
-                    <li><a th:href="@{/vendas}" class="nav-link text-white">Vendas</a></li>
-                    <li><a th:href="@{/compras}" class="nav-link text-white">Compras</a></li>
-                    <li><a th:href="@{/ordens-servico}" class="nav-link text-white">Ordens de Serviço</a></li>
-                    <li><a th:href="@{/contas-a-receber}" class="nav-link text-white">Contas a Receber</a></li>
-                    <li><a th:href="@{/contas-a-pagar}" class="nav-link text-white">Contas a Pagar</a></li>
+                    <li><a th:href="@{/vendas}" class="nav-link text-white" th:classappend="${activePage == 'vendas'} ? 'active'">Vendas</a></li>
+                    <li><a th:href="@{/compras}" class="nav-link text-white" th:classappend="${activePage == 'compras'} ? 'active'">Compras</a></li>
+                    <li><a th:href="@{/ordens-servico}" class="nav-link text-white" th:classappend="${activePage == 'ordens-servico'} ? 'active'">Ordens de Serviço</a></li>
+                    <li><a th:href="@{/contas-a-receber}" class="nav-link text-white" th:classappend="${activePage == 'contas-a-receber'} ? 'active'">Contas a Receber</a></li>
+                    <li><a th:href="@{/contas-a-pagar}" class="nav-link text-white" th:classappend="${activePage == 'contas-a-pagar'} ? 'active'">Contas a Pagar</a></li>
                 </ul>
             </div>
         </li>
 
         <li class="nav-item">
             <div class="nav-link text-white d-flex align-items-center gap-2" style="cursor: default;">
-                <i class="bi bi-clipboard-data-fill"></i>
+                <i class="bi bi-graph-up-arrow"></i>
                 <span>Relatórios</span>
             </div>
             <div>
                 <ul class="nav nav-pills flex-column mt-2 ps-4">
-                    <li><a href="#" class="nav-link text-white-50">Cadastrais</a></li>
-                    <li><a href="#" class="nav-link text-white-50">Financeiro</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" th:href="@{/relatorios/faturamento}">
+                            Faturamento
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" th:href="@{/relatorios/fluxo-caixa}">
+                            Fluxo de Caixa
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" th:href="@{/relatorios/desempenho-servicos}">
+                            Desemp. de Serviços
+                        </a>
+                    </li>
                 </ul>
             </div>
         </li>

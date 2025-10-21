@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="'Editar OS #' + ${os.id}"></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f0f2f5; }
+        .main-layout { display: flex; min-height: 100vh; }
+        .content-wrapper { flex-grow: 1; padding: 2rem; overflow-y: auto; }
+        .form-card { background-color: #ffffff; border-radius: 1rem; padding: 2.5rem; max-width: 900px; margin: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .total-display { font-size: 1.5rem; font-weight: 700; color: #198754; }
+        .select2-container--bootstrap-5 .select2-selection { padding: 0.5rem 1rem; height: auto; }
+    </style>
+</head>
+<body>
+
+<div class="main-layout">
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    <div class="content-wrapper">
+        <div class="form-card">
+            <h2 class="fw-bold text-center mb-4" th:text="'Editar Ordem de Serviço #' + ${os.id}"></h2>
+            <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+
+            <form method="post" th:object="${dto}" th:action="@{/ordens-servico/edit/{id}(id=${os.id})}">
+                <fieldset class="mb-4">
+                    <legend class="h5 fw-bold border-bottom pb-2 mb-3">1. Cliente e Veículo</legend>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="clienteId" class="form-label fw-semibold">Cliente</label>
+                            <select id="clienteId" class="form-select" th:field="*{clienteId}" required>
+                                <option value="">Selecione...</option>
+                                <option th:each="c : ${clientes}" th:value="${c.id}" th:text="${c.nome}"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="veiculoId" class="form-label fw-semibold">Veículo</label>
+                            <select id="veiculoId" class="form-select" th:field="*{veiculoId}" required>
+                                <option value="">Selecione um cliente primeiro</option>
+                                <option th:each="v : ${veiculosDoCliente}" th:value="${v.id}" th:text="${v.placa} + ' - ' + ${v.modelo}"></option>
+                            </select>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset class="mb-4">
+                    <legend class="h5 fw-bold border-bottom pb-2 mb-3">2. Serviços e Equipe</legend>
+                    <div class="mb-3">
+                        <label for="servicoIds" class="form-label fw-semibold">Serviços</label>
+                        <select id="servicoIds" class="form-select" th:field="*{servicoIds}" multiple required>
+                            <option th:each="s : ${servicos}" th:value="${s.id}" th:text="${s.nome} + ' - ' + ${#numbers.formatCurrency(s.preco)}" th:attr="data-preco=${s.preco}"></option>
+                        </select>
+                    </div>
+                    <div class="d-flex justify-content-end align-items-center mt-3">
+                        <span class="me-3 fs-5 fw-semibold">Total dos Serviços:</span>
+                        <span class="total-display" id="total-os">R$ 0,00</span>
+                    </div>
+                    <div class="mb-3">
+                        <label for="funcionarioIds" class="form-label fw-semibold">Funcionários Envolvidos</label>
+                        <select id="funcionarioIds" class="form-select" th:field="*{funcionarioIds}" multiple>
+                            <option th:each="f : ${funcionarios}" th:value="${f.id}" th:text="${f.nome}"></option>
+                        </select>
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <legend class="h5 fw-bold border-bottom pb-2 mb-3">3. Detalhes Adicionais</legend>
+                    <div class="row g-3">
+                        <div class="col-md-6"><label for="previsaoEntrega" class="form-label fw-semibold">Previsão de Entrega</label><input type="datetime-local" class="form-control" id="previsaoEntrega" th:field="*{previsaoEntrega}"/></div>
+                        <div class="col-12"><label for="observacoes" class="form-label fw-semibold">Observações</label><textarea class="form-control" id="observacoes" rows="3" th:field="*{observacoes}"></textarea></div>
+                    </div>
+                </fieldset>
+
+                <div class="row g-2 mt-4">
+                    <div class="col-6 d-grid"><a class="btn btn-outline-danger" th:href="@{/ordens-servico}">Cancelar</a></div>
+                    <div class="col-6 d-grid"><button type="submit" class="btn btn-success">Salvar Alterações</button></div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        // --- Inicializa os plugins ---
+        $('#clienteId, #veiculoId, #servicoIds, #funcionarioIds').select2({
+            theme: 'bootstrap-5',
+            placeholder: "Selecione..."
+        });
+
+        // --- Funções Auxiliares ---
+        function calcularTotal() {
+            let total = 0.0;
+            $('#servicoIds').find('option:selected').each(function () {
+                total += parseFloat($(this).data('preco')) || 0;
+            });
+            $('#total-os').text(total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }));
+        }
+
+        // --- Lógica Inicial ---
+        calcularTotal(); // Calcula o total para os serviços já selecionados
+
+        // --- Eventos ---
+        $('#clienteId').on('change', function() {
+            const clienteId = $(this).val();
+            const veiculoSelect = $('#veiculoId');
+
+            veiculoSelect.empty().prop('disabled', true);
+
+            if (clienteId) {
+                $.get(`/veiculos/api/por-cliente/${clienteId}`, function(data) {
+                    veiculoSelect.append($('<option>', { value: '', text: 'Selecione...' }));
+                    if(data && data.length > 0){
+                        data.forEach(v => {
+                            const option = new Option(`${v.placa} - ${v.modelo}`, v.id);
+                            veiculoSelect.append(option);
+                        });
+                        veiculoSelect.prop('disabled', false);
+                    } else {
+                        veiculoSelect.append($('<option>', { value: '', text: 'Nenhum veículo encontrado' }));
+                    }
+                    veiculoSelect.trigger('change.select2');
+                }).fail(function() {
+                    console.error("Erro ao buscar veículos.");
+                    veiculoSelect.append($('<option>', { value: '', text: 'Erro ao buscar' }));
+                });
+            }
+        });
+
+        $('#servicoIds').on('change', calcularTotal);
+    });
+</script>
+</body>
+</html>

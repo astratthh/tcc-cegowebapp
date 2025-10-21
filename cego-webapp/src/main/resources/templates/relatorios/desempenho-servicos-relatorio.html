@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Relatório de Desempenho de Serviços</title>
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 10px; }
+        .report-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 9px;}
+        .report-table th, .report-table td { border: 1px solid #ccc; padding: 4px; text-align: left; }
+        .report-table th { background-color: #f2f2f2; font-weight: bold;}
+        .report-table td.currency, .report-table th.currency { text-align: right; }
+        .report-table td.count, .report-table th.count { text-align: center; }
+        h1 { text-align: center; font-size: 16px; margin-bottom: 5px; }
+        .header-info { text-align: center; margin-bottom: 15px; }
+        .total-row { font-weight: bold; background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+<h1>Relatório de Desempenho de Serviços</h1>
+<div class="header-info">
+    Período de Análise:
+    <strong th:text="${#temporals.format(dataInicio, 'dd/MM/yyyy')}"></strong> a
+    <strong th:text="${#temporals.format(dataFim, 'dd/MM/yyyy')}"></strong><br/>
+    Gerado em: <span th:text="${#temporals.format(dataGeracao, 'dd/MM/yyyy HH:mm')}"></span>
+</div>
+
+<h2>Serviços Realizados (Ordenado por Faturamento)</h2>
+<table class="report-table">
+    <thead>
+    <tr>
+        <th>Serviço</th>
+        <th class="count">Qtd. Realizada</th>
+        <th class="currency">Faturamento Total</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="servico : ${servicos}">
+        <td th:text="${servico.nomeServico}"></td>
+        <td class="count" th:text="${servico.quantidadeRealizada}"></td>
+        <td class="currency" th:text="${#numbers.formatCurrency(servico.faturamentoTotal)}"></td>
+    </tr>
+    <tr th:if="${#lists.isEmpty(servicos)}">
+        <td colspan="3" style="text-align: center;">Nenhum serviço pago encontrado no período.</td>
+    </tr>
+    <tr class="total-row">
+        <td colspan="2"><strong>FATURAMENTO TOTAL (SERVIÇOS):</strong></td>
+        <td class="currency"><strong><span th:text="${#numbers.formatCurrency(faturamentoTotalServicos)}"></span></strong></td>
+    </tr>
+    </tbody>
+</table>
+
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Relatório de Clientes</title>
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 12px; }
+        .report-table { width: 100%; border-collapse: collapse; }
+        .report-table th, .report-table td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        .report-table th { background-color: #f2f2f2; font-weight: bold; }
+        h1 { text-align: center; }
+        .footer { text-align: center; font-size: 10px; color: #777; position: fixed; bottom: 0; width: 100%; }
+    </style>
+</head>
+<body>
+<h1>Relatório de Clientes</h1>
+<p>Relatório gerado em: <strong th:text="${#temporals.format(dataGeracao, 'dd/MM/yyyy HH:mm')}"></strong></p>
+<hr/>
+<table class="report-table">
+    <thead>
+    <tr>
+        <th>Nome</th>
+        <th>Documento</th>
+        <th>Email</th>
+        <th>Telefone</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="cliente : ${clientes}">
+        <td th:text="${cliente.nome}"></td>
+        <td th:text="${cliente.documento}"></td>
+        <td th:text="${cliente.email}"></td>
+        <td th:text="${cliente.telefone}"></td>
+    </tr>
+    <tr th:if="${#lists.isEmpty(clientes)}">
+        <td colspan="4" style="text-align: center;">Nenhum cliente encontrado para os filtros aplicados.</td>
+    </tr>
+    </tbody>
+</table>
+    <div class="summary">
+        <p th:text="'Total de Clientes Exibidos: ' + ${totalClientes}"></p>
+    </div>
+</body>
+</html>

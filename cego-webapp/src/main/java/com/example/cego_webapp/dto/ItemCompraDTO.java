@@ -13,5 +13,8 @@ public class ItemCompraDTO {
     private Integer quantidade;
 
     @NotNull @DecimalMin("0.01")
-    private BigDecimal custoUnitario; // Campo para o usuário digitar o custo
+    private BigDecimal custoUnitario;
+
+    // NOVO: Campo para o nome do produto, útil na tela de edição
+    private String nomeProduto;
 }

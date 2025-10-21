@@ -1,5 +1,6 @@
 package com.example.cego_webapp.dto;
 
+import com.example.cego_webapp.models.Fornecedor;
 import com.example.cego_webapp.validations.CpfOrCnpj;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -10,7 +11,6 @@ import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
-@NoArgsConstructor
 public class FornecedorDTO {
 
     @NotEmpty(message = "Nome é obrigatório")
@@ -29,5 +29,15 @@ public class FornecedorDTO {
     @NotEmpty(message = "Email é obrigatório")
     @Email
     private String email;
-    
+
+    public FornecedorDTO() {} // construtor vazio
+
+    // NOVO CONSTRUTOR
+    public FornecedorDTO(Fornecedor fornecedor) {
+        this.nome = fornecedor.getNome();
+        this.documento = fornecedor.getDocumento();
+        this.email = fornecedor.getEmail();
+        this.telefone = fornecedor.getTelefone();
+        this.endereco = fornecedor.getEndereco();
+    }
 }

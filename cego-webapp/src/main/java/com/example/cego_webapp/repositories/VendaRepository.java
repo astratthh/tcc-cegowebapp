@@ -12,4 +12,5 @@ public interface VendaRepository extends JpaRepository<Venda, Long> {
     @EntityGraph(attributePaths = {"cliente", "itens", "itens.produto"})
     Page<Venda> findAll(Pageable pageable);
 
+    Page<Venda> findByClienteNomeContainingIgnoreCase(String keyword, Pageable pageable);
 }

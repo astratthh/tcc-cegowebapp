@@ -1,5 +1,6 @@
 package com.example.cego_webapp.dto;
 
+import com.example.cego_webapp.models.Servico;
 import jakarta.persistence.Column;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
@@ -13,7 +14,6 @@ import java.math.BigDecimal;
 
 @Data
 @AllArgsConstructor
-@NoArgsConstructor
 public class ServicoDTO {
 
     @NotBlank(message = "Nome é obrigatório")
@@ -29,4 +29,12 @@ public class ServicoDTO {
     @Column(nullable = false)
     private BigDecimal preco;
 
+    public ServicoDTO() {} // construtor vazio
+
+    // NOVO CONSTRUTOR
+    public ServicoDTO(Servico servico) {
+        this.setNome(servico.getNome());
+        this.setDescricao(servico.getDescricao());
+        this.setPreco(servico.getPreco());
+    }
 }

@@ -1,8 +1,12 @@
+// src/main/java/com/example/cego_webapp/controllers/FornecedorController.java
+
 package com.example.cego_webapp.controllers;
 
 import com.example.cego_webapp.dto.FornecedorDTO;
 import com.example.cego_webapp.models.Fornecedor;
-import com.example.cego_webapp.repositories.FornecedorRepository;
+import com.example.cego_webapp.services.FornecedorService;
+import com.example.cego_webapp.services.PdfService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -15,146 +19,143 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes; // Adicionar import
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/fornecedores")
 public class FornecedorController {
+
     @Autowired
-    private FornecedorRepository fornecedorRepository;
+    private FornecedorService fornecedorService;
 
+    @Autowired
+    private PdfService pdfService;
+
+    // ... (getFornecedores, createFornecedorForm, createFornecedor continuam iguais) ...
     @GetMapping({"", "/"})
-    public String getFornecedores(Model model,
-                                  @RequestParam(defaultValue = "0") int page,
-                                  @RequestParam(defaultValue = "10") int size,
-                                  @RequestParam(defaultValue = "id,desc") String sort, // Adicionado para manter o estado da ordenação
-                                  @RequestParam(required = false) String keyword) { // Adicionado para manter o estado da busca
-
+    public String getFornecedores(Model model, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size, @RequestParam(defaultValue = "id,desc") String sort, @RequestParam(required = false) String keyword) {
         String[] sortParams = sort.split(",");
         String sortField = sortParams[0];
         Sort.Direction sortDir = sortParams.length > 1 && sortParams[1].equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
-
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortDir, sortField));
-        Page<Fornecedor> fornecedoresPage;
-
-        if(keyword != null && !keyword.isEmpty()){
-            fornecedoresPage = fornecedorRepository.findByNomeContainingIgnoreCase(keyword, pageable);
-        } else {
-            fornecedoresPage = fornecedorRepository.findAll(pageable);
-        }
-
+        Page<Fornecedor> fornecedoresPage = fornecedorService.listarFornecedores(keyword, pageable);
         model.addAttribute("fornecedoresPage", fornecedoresPage);
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", fornecedoresPage.getTotalPages());
         model.addAttribute("sortField", sortField);
         model.addAttribute("sortDir", sortDir.name().toLowerCase());
         model.addAttribute("keyword", keyword);
-
         return "fornecedores/index";
     }
-
     @GetMapping("/create")
-    public String createFornecedor(Model model) {
+    public String createFornecedorForm(Model model) {
         if (!model.containsAttribute("fornecedorDTO")) {
             model.addAttribute("fornecedorDTO", new FornecedorDTO());
         }
         return "fornecedores/create";
     }
-
     @PostMapping("/create")
     public String createFornecedor(@Valid @ModelAttribute("fornecedorDTO") FornecedorDTO fornecedorDTO, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
-
-        String documentoLimpo = fornecedorDTO.getDocumento().replaceAll("[^0-9]", "");
-        if (fornecedorRepository.findByDocumento(documentoLimpo) != null) {
-            bindingResult.addError(new FieldError("fornecedorDTO", "documento", "Documento já cadastrado"));
-        }
-
         if (bindingResult.hasErrors()) {
             redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.fornecedorDTO", bindingResult);
             redirectAttributes.addFlashAttribute("fornecedorDTO", fornecedorDTO);
             return "redirect:/fornecedores/create";
         }
-
-        Fornecedor fornecedor = new Fornecedor();
-        fornecedor.setNome(fornecedorDTO.getNome());
-        fornecedor.setDocumento(documentoLimpo);
-        fornecedor.setEmail(fornecedorDTO.getEmail());
-        fornecedor.setTelefone(fornecedorDTO.getTelefone());
-        fornecedor.setEndereco(fornecedorDTO.getEndereco());
-        fornecedorRepository.save(fornecedor);
-
-        redirectAttributes.addFlashAttribute("successMessage", "Fornecedor cadastrado com sucesso!");
-        return "redirect:/fornecedores";
+        try {
+            fornecedorService.criarFornecedor(fornecedorDTO);
+            redirectAttributes.addFlashAttribute("successMessage", "Fornecedor cadastrado com sucesso!");
+            return "redirect:/fornecedores";
+        } catch (IllegalArgumentException e) {
+            bindingResult.addError(new FieldError("fornecedorDTO", "documento", e.getMessage()));
+            redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.fornecedorDTO", bindingResult);
+            redirectAttributes.addFlashAttribute("fornecedorDTO", fornecedorDTO);
+            return "redirect:/fornecedores/create";
+        }
     }
 
+
+    // ### MÉTODO CORRIGIDO ###
     @GetMapping("/edit")
-    public String editFornecedor(@RequestParam Integer id, Model model) {
-        Fornecedor fornecedor = fornecedorRepository.findById(id).orElse(null);
-        if (fornecedor == null) {
+    public String editFornecedorForm(@RequestParam Integer id, Model model, RedirectAttributes redirectAttributes) {
+        try {
+            Fornecedor fornecedor = fornecedorService.buscarPorId(id);
+            if (!model.containsAttribute("fornecedorDTO")) {
+                model.addAttribute("fornecedorDTO", new FornecedorDTO(fornecedor));
+            }
+
+            // CORREÇÃO 1: Enviar o objeto inteiro com o nome "fornecedor"
+            model.addAttribute("fornecedor", fornecedor);
+
+            // CORREÇÃO 2: Ajustar o nome da página ativa
+            model.addAttribute("activePage", "fornecedores");
+
+            return "fornecedores/edit";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
             return "redirect:/fornecedores";
         }
-
-        if (!model.containsAttribute("fornecedorDTO")) {
-            FornecedorDTO fornecedorDTO = new FornecedorDTO();
-            fornecedorDTO.setNome(fornecedor.getNome());
-            fornecedorDTO.setDocumento(fornecedor.getDocumento());
-            fornecedorDTO.setEmail(fornecedor.getEmail());
-            fornecedorDTO.setTelefone(fornecedor.getTelefone());
-            fornecedorDTO.setEndereco(fornecedor.getEndereco());
-            model.addAttribute("fornecedorDTO", fornecedorDTO);
-        }
-
-        model.addAttribute("fornecedor", fornecedor);
-        return "fornecedores/edit";
     }
 
     @PostMapping("/edit")
     public String editFornecedor(@RequestParam Integer id, @Valid @ModelAttribute("fornecedorDTO") FornecedorDTO fornecedorDTO, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
-
-        Fornecedor fornecedor = fornecedorRepository.findById(id).orElse(null);
-        if (fornecedor == null) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Fornecedor não encontrado.");
-            return "redirect:/fornecedores";
-        }
-
-        String documentoLimpo = fornecedorDTO.getDocumento().replaceAll("[^0-9]", "");
-        if (!documentoLimpo.equals(fornecedor.getDocumento())) {
-            Fornecedor existing = fornecedorRepository.findByDocumento(documentoLimpo);
-            if (existing != null) {
-                bindingResult.addError(new FieldError("fornecedorDTO", "documento", "Documento já cadastrado"));
-            }
-        }
-
         if (bindingResult.hasErrors()) {
             redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.fornecedorDTO", bindingResult);
             redirectAttributes.addFlashAttribute("fornecedorDTO", fornecedorDTO);
             return "redirect:/fornecedores/edit?id=" + id;
         }
-
-        fornecedor.setNome(fornecedorDTO.getNome());
-        fornecedor.setDocumento(documentoLimpo);
-        fornecedor.setEmail(fornecedorDTO.getEmail());
-        fornecedor.setTelefone(fornecedorDTO.getTelefone());
-        fornecedor.setEndereco(fornecedorDTO.getEndereco());
-        fornecedorRepository.save(fornecedor);
-
-        redirectAttributes.addFlashAttribute("successMessage", "Fornecedor atualizado com sucesso!");
-        return "redirect:/fornecedores";
+        try {
+            fornecedorService.atualizarFornecedor(id, fornecedorDTO);
+            redirectAttributes.addFlashAttribute("successMessage", "Fornecedor atualizado com sucesso!");
+            return "redirect:/fornecedores";
+        } catch (IllegalArgumentException e) {
+            bindingResult.addError(new FieldError("fornecedorDTO", "documento", e.getMessage()));
+            redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.fornecedorDTO", bindingResult);
+            redirectAttributes.addFlashAttribute("fornecedorDTO", fornecedorDTO);
+            return "redirect:/fornecedores/edit?id=" + id;
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:/fornecedores";
+        }
     }
 
     @GetMapping("/delete")
     public String deleteFornecedor(@RequestParam Integer id, RedirectAttributes redirectAttributes) {
         try {
-            if (!fornecedorRepository.existsById(id)) {
-                throw new Exception("Fornecedor não encontrado.");
-            }
-            fornecedorRepository.deleteById(id);
+            fornecedorService.deletarFornecedor(id);
             redirectAttributes.addFlashAttribute("successMessage", "Fornecedor excluído com sucesso!");
         } catch (DataIntegrityViolationException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Não é possível excluir o fornecedor, pois ele está associado a uma ou mais compras.");
+            // "Tradução" do erro
+            redirectAttributes.addFlashAttribute("errorMessage", "Não é possível excluir o fornecedor, pois ele está associado a uma ou mais Compras.");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Erro ao excluir o fornecedor: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
         return "redirect:/fornecedores";
     }
+
+    @GetMapping("/relatorio/pdf")
+    public void gerarRelatorioPdf(@RequestParam(required = false) String keyword, HttpServletResponse response) throws IOException {
+        // Busca a lista completa de fornecedores
+        List<Fornecedor> fornecedores = fornecedorService.listarTodosParaRelatorio(keyword);
+
+        // Prepara as variáveis para o template
+        Map<String, Object> variaveis = new HashMap<>();
+        variaveis.put("fornecedores", fornecedores);
+        variaveis.put("dataGeracao", LocalDateTime.now());
+        variaveis.put("totalFornecedores", fornecedores.size());
+
+        // Gera o PDF
+        byte[] pdfBytes = pdfService.gerarPdfDeHtml("fornecedor-relatorio.html", variaveis);
+
+        // Envia o PDF para o navegador
+        response.setContentType("application/pdf");
+        response.setHeader("Content-Disposition", "attachment; filename=relatorio_fornecedores.pdf");
+        response.getOutputStream().write(pdfBytes);
+    }
+
 }

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Relatório de Faturamento</title>
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 10px; }
+        .report-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 9px;}
+        .report-table th, .report-table td { border: 1px solid #ccc; padding: 4px; text-align: left; }
+        .report-table th { background-color: #f2f2f2; font-weight: bold;}
+        .report-table td.currency { text-align: right; }
+        h1, h2 { text-align: center; margin-bottom: 5px; }
+        h1 { font-size: 16px; }
+        h2 { font-size: 14px; margin-top: 15px; }
+        .header-info { text-align: center; margin-bottom: 15px; }
+        .summary-table { width: 60%; border-collapse: collapse; margin: 20px auto; font-size: 11px;}
+        .summary-table td { border: 1px solid #ccc; padding: 6px; }
+        .summary-table .label { font-weight: bold; background-color: #f2f2f2; text-align: right; padding-right: 10px; }
+        .summary-table .value { text-align: right; }
+        .total { font-weight: bold; font-size: 12px; background-color: #e9f5e9; }
+    </style>
+</head>
+<body>
+<h1>Relatório de Faturamento</h1>
+<div class="header-info">
+    Período de Análise:
+    <strong th:text="${#temporals.format(dataInicio, 'dd/MM/yyyy')}"></strong> a
+    <strong th:text="${#temporals.format(dataFim, 'dd/MM/yyyy')}"></strong><br/>
+    Gerado em: <span th:text="${#temporals.format(dataGeracao, 'dd/MM/yyyy HH:mm')}"></span>
+</div>
+
+<h2>Vendas Recebidas</h2>
+<table class="report-table">
+    <thead>
+    <tr>
+        <th>ID Venda</th>
+        <th>Cliente</th>
+        <th>Data Receb.</th>
+        <th>Forma Pag.</th>
+        <th style="text-align: right;">Valor</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="conta : ${vendasPagas}">
+        <td th:text="${conta.venda.id}"></td>
+        <td th:text="${conta.getClienteNome()}"></td>
+        <td th:text="${#temporals.format(conta.dataRecebimento, 'dd/MM/yyyy')}"></td>
+        <td th:text="${conta.formaPagamento?.descricao}"></td>
+        <td class="currency" th:text="${#numbers.formatCurrency(conta.valor)}"></td>
+    </tr>
+    <tr th:if="${#lists.isEmpty(vendasPagas)}"><td colspan="5" style="text-align: center;">Nenhuma venda recebida no período.</td></tr>
+    </tbody>
+</table>
+
+<h2>Ordens de Serviço Recebidas</h2>
+<table class="report-table">
+    <thead>
+    <tr>
+        <th>ID OS</th>
+        <th>Cliente</th>
+        <th>Data Receb.</th>
+        <th>Forma Pag.</th>
+        <th style="text-align: right;">Valor</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="conta : ${osPagas}">
+        <td th:text="${conta.ordemServico.id}"></td>
+        <td th:text="${conta.getClienteNome()}"></td>
+        <td th:text="${#temporals.format(conta.dataRecebimento, 'dd/MM/yyyy')}"></td>
+        <td th:text="${conta.formaPagamento?.descricao}"></td>
+        <td class="currency" th:text="${#numbers.formatCurrency(conta.valor)}"></td>
+    </tr>
+    <tr th:if="${#lists.isEmpty(osPagas)}"><td colspan="5" style="text-align: center;">Nenhuma OS recebida no período.</td></tr>
+    </tbody>
+</table>
+
+<h2>Resumo Financeiro</h2>
+<table class="summary-table">
+    <tr>
+        <td class="label">Total Recebido (Vendas):</td>
+        <td class="value" th:text="${#numbers.formatCurrency(totalVendas)}"></td>
+    </tr>
+    <tr>
+        <td class="label">Total Recebido (OS):</td>
+        <td class="value" th:text="${#numbers.formatCurrency(totalOS)}"></td>
+    </tr>
+    <tr class="total">
+        <td class="label">FATURAMENTO TOTAL NO PERÍODO:</td>
+        <td class="value" th:text="${#numbers.formatCurrency(faturamentoTotal)}"></td>
+    </tr>
+</table>
+</body>
+</html>

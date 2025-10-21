@@ -4,10 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Compras | Gestão Profissional</title>
+
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
   <style>
     body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; }
     .main-layout { display: flex; min-height: 100vh; }
@@ -17,6 +19,7 @@
     .table-borderless-outside { border-collapse: separate; border-spacing: 0; }
     .table-borderless-outside > :not(caption) > * > * { border-bottom-width: 1px; border-color: #dee2e6; }
     .table-borderless-outside > tbody > tr:last-child > td { border-bottom-width: 0; }
+    .badge { font-size: 0.8rem; padding: 0.4em 0.7em; } /* Adicionado da tela de Vendas */
   </style>
 </head>
 <body>
@@ -37,7 +40,9 @@
       <div class="card shadow-sm border-0">
         <div class="card-header p-3 d-flex justify-content-between align-items-center">
           <h1 class="h4 mb-0 fw-bold">Gestão de Compras</h1>
-          <a class="btn btn-info text-white d-flex align-items-center gap-2" th:href="@{/compras/create}"><i class="bi bi-truck"></i><span>Registrar Compra</span></a>
+          <a class="btn btn-primary d-flex align-items-center gap-2" th:href="@{/compras/create}">
+            <i class="bi bi-truck"></i><span>Registrar Compra</span>
+          </a>
         </div>
         <div class="card-body border-bottom">
           <form th:action="@{/compras}" method="get" class="row g-2 align-items-center">
@@ -49,12 +54,15 @@
           <table class="table table-hover table-borderless-outside mb-0">
             <thead>
             <tr>
-              <th class="ps-4">Compra / Data</th><th>Fornecedor</th><th>Status / Itens</th><th>Custo Total</th><th class="text-end pe-4">Ações</th>
+              <th class="ps-4">Compra / Data</th>
+              <th>Fornecedor</th>
+              <th>Status Pag.</th> <th>Custo Total</th>
+              <th class="text-end pe-4">Ações</th>
             </tr>
             </thead>
             <tbody class="table-group-divider">
             <tr th:each="compra : ${comprasPage.content}" class="align-middle"
-                th:classappend="${compra.status == T(com.example.cego_webapp.models.CompraStatus).CANCELADA} ? 'text-muted bg-light' : ''">
+                th:classappend="${compra.status.name() == 'CANCELADA'} ? 'text-muted bg-light' : ''">
               <td class="ps-4">
                 <div>
                   <div class="fw-bold" th:text="'#' + ${compra.id}"></div>
@@ -62,14 +70,20 @@
                 </div>
               </td>
               <td th:text="${compra.fornecedor.nome}"></td>
+
               <td>
-                <span th:text="${#lists.size(compra.itens) + ' item(s)'}"></span>
-                <span th:if="${compra.status == T(com.example.cego_webapp.models.CompraStatus).FINALIZADA}" class="badge rounded-pill bg-primary-subtle text-primary-emphasis">Finalizada</span>
-                <span th:if="${compra.status == T(com.example.cego_webapp.models.CompraStatus).CANCELADA}" class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis">Cancelada</span>
+                <span th:if="${compra.status.name() == 'FINALIZADA'}" class="badge bg-warning">A Pagar</span>
+                <span th:if="${compra.status.name() == 'PAGA'}" class="badge bg-success">Paga</span>
+                <span th:if="${compra.status.name() == 'CANCELADA'}" class="badge bg-secondary">Cancelada</span>
+
+                <div th:if="${compra.status.name() == 'FINALIZADA' and compra.contaPagar != null and compra.contaPagar.dataVencimento.isBefore(T(java.time.LocalDate).now())}">
+                  <span class="badge bg-danger-subtle text-danger-emphasis mt-1">Vencido</span>
+                </div>
               </td>
-              <td class="fw-bold"
-                  th:text="${#numbers.formatCurrency(compra.valorTotal)}"
-                  th:style="${compra.status == T(com.example.cego_webapp.models.CompraStatus).CANCELADA} ? 'text-decoration: line-through;' : ''"></td>
+
+              <td class="fw-bold" th:text="${#numbers.formatCurrency(compra.valorTotal)}"
+                  th:style="${compra.status.name() == 'CANCELADA'} ? 'text-decoration: line-through;' : ''"></td>
+
               <td class="text-end pe-4" style="white-space: nowrap;">
                 <button type="button" class="btn btn-sm btn-outline-info btn-details" data-bs-toggle="modal" data-bs-target="#purchaseDetailsModal"
                         th:data-purchase-id="${compra.id}"
@@ -79,12 +93,20 @@
                         title="Detalhes">
                   <i class="bi bi-eye-fill"></i>
                 </button>
-                <a th:if="${compra.status == T(com.example.cego_webapp.models.CompraStatus).FINALIZADA and compra.contaPagar?.status == T(com.example.cego_webapp.models.ContaPagarStatus).A_PAGAR}"
+
+                <a th:if="${compra.status.name() == 'FINALIZADA'}"
+                   th:href="@{/compras/edit/{id}(id=${compra.id})}"
+                   class="btn btn-sm btn-outline-secondary ms-1"
+                   data-bs-toggle="tooltip" title="Editar Compra">
+                  <i class="bi bi-pencil-fill"></i>
+                </a>
+                <a th:if="${compra.status.name() == 'FINALIZADA'}"
                    class="btn btn-sm btn-outline-danger ms-1 btn-cancel"
                    th:href="@{/compras/cancelar(id=${compra.id})}"
                    data-bs-toggle="tooltip" title="Cancelar Compra">
                   <i class="bi bi-x-circle-fill"></i>
                 </a>
+
                 <div class="d-none" th:id="'items-for-compra-' + ${compra.id}">
                   <table>
                     <tr th:each="item : ${compra.itens}">
@@ -101,7 +123,7 @@
             </tbody>
           </table>
         </div>
-        <div class="card-footer bg-white pt-3" th:if="${!comprasPage.empty}">
+        <div class="card-footer bg-white pt-3" th:if="${!comprasPage.empty && comprasPage.totalPages > 1}">
           <nav aria-label="Navegação de páginas">
             <ul class="pagination justify-content-center">
               <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'"><a class="page-link" th:href="@{/compras(page=${currentPage - 1}, size=${comprasPage.size})}">Anterior</a></li>
@@ -115,62 +137,13 @@
   </div>
 </div>
 
-<div class="modal fade" id="purchaseDetailsModal" tabindex="-1" aria-labelledby="purchaseDetailsModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content rounded-3 shadow">
-      <div class="modal-header border-0"><h5 class="modal-title fw-bold" id="purchaseDetailsModalLabel">Detalhes da Compra</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
-      <div class="modal-body">
-        <div class="row mb-3"><div class="col-sm-8"><small class="text-muted">Fornecedor</small><p class="fw-bold fs-5" id="modalPurchaseSupplier"></p></div><div class="col-sm-4 text-sm-end"><small class="text-muted">ID da Compra</small><p class="fw-bold fs-5" id="modalPurchaseId"></p></div></div>
-        <div class="row mb-4"><div class="col-sm-8"><small class="text-muted">Data e Hora</small><p id="modalPurchaseDate"></p></div><div class="col-sm-4 text-sm-end"><small class="text-muted">Custo Total</small><p class="fw-bold fs-4 text-danger" id="modalPurchaseTotal"></p></div></div>
-        <h6 class="mb-2">Itens Inclusos:</h6>
-        <table class="table table-sm table-striped"><thead><tr><th>Produto</th><th class="text-center">Qtd.</th><th class="text-end">Custo Unit.</th><th class="text-end">Subtotal</th></tr></thead><tbody id="modalPurchaseItems"></tbody></table>
-      </div>
-      <div class="modal-footer border-0"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button></div>
-    </div>
-  </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<div class="modal fade" id="purchaseDetailsModal" tabindex="-1" aria-labelledby="purchaseDetailsModalLabel" aria-hidden="true"><div class="modal-dialog modal-lg modal-dialog-centered"><div class="modal-content rounded-3 shadow"><div class="modal-header border-0"><h5 class="modal-title fw-bold" id="purchaseDetailsModalLabel">Detalhes da Compra</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body"><div class="row mb-3"><div class="col-sm-8"><small class="text-muted">Fornecedor</small><p class="fw-bold fs-5" id="modalPurchaseSupplier"></p></div><div class="col-sm-4 text-sm-end"><small class="text-muted">ID da Compra</small><p class="fw-bold fs-5" id="modalPurchaseId"></p></div></div><div class="row mb-4"><div class="col-sm-8"><small class="text-muted">Data e Hora</small><p id="modalPurchaseDate"></p></div><div class="col-sm-4 text-sm-end"><small class="text-muted">Custo Total</small><p class="fw-bold fs-4 text-danger" id="modalPurchaseTotal"></p></div></div><h6 class="mb-2">Itens Inclusos:</h6><table class="table table-sm table-striped"><thead><tr><th>Produto</th><th class="text-center">Qtd.</th><th class="text-end">Custo Unit.</th><th class="text-end">Subtotal</th></tr></thead><tbody id="modalPurchaseItems"></tbody></table></div><div class="modal-footer border-0"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button></div></div></div></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script><script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
   const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
   [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
-
-  // Script para o Modal de Detalhes
-  document.querySelectorAll('.btn-details').forEach(button => {
-    button.addEventListener('click', function () {
-      document.getElementById('modalPurchaseId').textContent = '#' + this.getAttribute('data-purchase-id');
-      document.getElementById('modalPurchaseSupplier').textContent = this.getAttribute('data-purchase-fornecedor');
-      document.getElementById('modalPurchaseDate').textContent = this.getAttribute('data-purchase-data');
-      document.getElementById('modalPurchaseTotal').textContent = this.getAttribute('data-purchase-total');
-      const purchaseId = this.getAttribute('data-purchase-id');
-      const hiddenItemsContent = document.getElementById(`items-for-compra-${purchaseId}`).querySelector('table');
-      const itemsTableBody = document.getElementById('modalPurchaseItems');
-      if (hiddenItemsContent) { itemsTableBody.innerHTML = hiddenItemsContent.innerHTML; }
-      else { itemsTableBody.innerHTML = '<tr><td colspan="4">Nenhum item encontrado.</td></tr>'; }
-    });
-  });
-
-  // SCRIPT DE CANCELAR ATUALIZADO E SIMPLIFICADO
-  document.querySelectorAll('.btn-cancel').forEach(button => {
-    button.addEventListener('click', function (e) {
-      e.preventDefault();
-      Swal.fire({
-        title: 'Confirmar cancelamento?',
-        text: "Esta ação ajustará o estoque e não poderá ser desfeita!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Sim, cancelar!',
-        cancelButtonText: 'Voltar'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          window.location.href = this.getAttribute('href');
-        }
-      });
-    });
-  });
+  document.querySelectorAll('.btn-details').forEach(button => { button.addEventListener('click', function () { document.getElementById('modalPurchaseId').textContent = '#' + this.getAttribute('data-purchase-id'); document.getElementById('modalPurchaseSupplier').textContent = this.getAttribute('data-purchase-fornecedor'); document.getElementById('modalPurchaseDate').textContent = this.getAttribute('data-purchase-data'); document.getElementById('modalPurchaseTotal').textContent = this.getAttribute('data-purchase-total'); const purchaseId = this.getAttribute('data-purchase-id'); const hiddenItemsContent = document.getElementById(`items-for-compra-${purchaseId}`).querySelector('table'); const itemsTableBody = document.getElementById('modalPurchaseItems'); if (hiddenItemsContent) { itemsTableBody.innerHTML = hiddenItemsContent.innerHTML; } else { itemsTableBody.innerHTML = '<tr><td colspan="4">Nenhum item encontrado.</td></tr>'; } }); });
+  document.querySelectorAll('.btn-cancel').forEach(button => { button.addEventListener('click', function (e) { e.preventDefault(); Swal.fire({ title: 'Confirmar cancelamento?', text: "Esta ação ajustará o estoque e não poderá ser desfeita!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#6c757d', confirmButtonText: 'Sim, cancelar!', cancelButtonText: 'Voltar' }).then((result) => { if (result.isConfirmed) { window.location.href = this.getAttribute('href'); } }); }); });
 </script>
 </body>
 </html>

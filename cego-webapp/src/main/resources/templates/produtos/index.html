@@ -39,7 +39,16 @@
       <div class="card shadow-sm border-0">
         <div class="card-header p-3 d-flex justify-content-between align-items-center">
           <h1 class="h4 mb-0 fw-bold">Gestão de Produtos</h1>
-          <a class="btn btn-primary d-flex align-items-center gap-2" th:href="@{/produtos/create}"><i class="bi bi-plus-lg"></i><span>Novo Produto</span></a>
+          <div>
+            <a class="btn btn-outline-danger d-inline-flex align-items-center gap-2"
+               th:href="@{/produtos/relatorio/pdf(keyword=${keyword})}">
+              <i class="bi bi-file-earmark-pdf-fill"></i>
+              <span>Gerar PDF</span>
+            </a>
+            <a class="btn btn-primary d-inline-flex align-items-center gap-2 ms-2" th:href="@{/produtos/create}">
+              <i class="bi bi-plus-lg"></i><span>Novo Produto</span>
+            </a>
+          </div>
         </div>
         <div class="card-body border-bottom">
           <form th:action="@{/produtos}" method="get" class="row g-2 align-items-center">

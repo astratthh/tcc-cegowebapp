@@ -1,5 +1,6 @@
 package com.example.cego_webapp.dto;
 
+import com.example.cego_webapp.models.Produto;
 import jakarta.persistence.Column;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
@@ -10,7 +11,6 @@ import java.math.BigDecimal;
 
 @Data
 @AllArgsConstructor
-@NoArgsConstructor
 public class ProdutoDTO {
 
     @NotBlank(message = "Nome é obrigatório")
@@ -30,5 +30,15 @@ public class ProdutoDTO {
     @Min(value = 0, message = "Estoque não pode ser negativo")
     @Column(nullable = false)
     private Integer estoque;
+
+    public ProdutoDTO() {} // construtor vazio
+
+    // NOVO CONSTRUTOR
+    public ProdutoDTO(Produto produto) {
+        this.setNome(produto.getNome());
+        this.setDescricao(produto.getDescricao());
+        this.setPreco(produto.getPreco());
+        this.setEstoque(produto.getEstoque());
+    }
 
 }

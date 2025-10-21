@@ -1,21 +1,16 @@
 package com.example.cego_webapp.models;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Entity
 @Table(name = "compras")
 public class Compra {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -32,8 +27,8 @@ public class Compra {
     @Column(nullable = false)
     private BigDecimal valorTotal;
 
-    @OneToMany(mappedBy = "compra", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ItemCompra> itens;
+    @OneToMany(mappedBy = "compra", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<ItemCompra> itens = new ArrayList<>();
 
     @OneToOne(mappedBy = "compra", cascade = CascadeType.ALL, orphanRemoval = true)
     private ContaPagar contaPagar;
@@ -41,6 +36,4 @@ public class Compra {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private CompraStatus status;
-
-    // O campo motivoCancelamento foi removido.
 }

@@ -14,4 +14,5 @@ public interface ClienteRepository extends JpaRepository<Cliente, Integer> {
     Cliente findByDocumento(String documento);
     Page<Cliente> findByNomeContainingIgnoreCase(String keyword, Pageable pageable);
     List<Cliente> findTop5ByOrderByIdDesc();
+    List<Cliente> findAllByNomeContainingIgnoreCase(String nome);
 }
