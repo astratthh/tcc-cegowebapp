@@ -24,7 +24,6 @@ public class Venda {
     @Column(nullable = false)
     private LocalDateTime dataHora;
 
-    // ### CAMPO ADICIONADO AQUI ###
     private LocalDateTime dataCancelamento;
 
     @Column(nullable = false)

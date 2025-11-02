@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 @Data
 @Entity
 @Table(name = "itens_venda")
-@NoArgsConstructor // Lombok gera o construtor vazio
+@NoArgsConstructor
 public class ItemVenda {
 
     @Id
@@ -30,7 +30,6 @@ public class ItemVenda {
     @Column(nullable = false)
     private BigDecimal precoUnitario;
 
-    // NOVO MÉTODO PARA CALCULAR O SUBTOTAL
     public BigDecimal getSubtotal() {
         if (precoUnitario == null) {
             return BigDecimal.ZERO;

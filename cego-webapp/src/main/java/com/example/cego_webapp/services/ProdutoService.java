@@ -53,7 +53,7 @@ public class ProdutoService {
 
     @Transactional
     public Produto atualizarProduto(Integer id, ProdutoDTO produtoDTO) {
-        Produto produto = buscarPorId(id); // Reutiliza o método de busca
+        Produto produto = buscarPorId(id);
 
         produto.setNome(produtoDTO.getNome());
         produto.setDescricao(produtoDTO.getDescricao());
@@ -67,7 +67,6 @@ public class ProdutoService {
         if (!produtoRepository.existsById(id)) {
             throw new EntityNotFoundException("Produto não encontrado.");
         }
-        // try-catch removido
         produtoRepository.deleteById(id);
     }
 }

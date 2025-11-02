@@ -37,7 +37,7 @@ public class ContasPagarService {
     }
 
     @Transactional
-    public void marcarComoPaga(Long id, FormaPagamento formaPagamento) { // Parâmetro adicionado
+    public void marcarComoPaga(Long id, FormaPagamento formaPagamento) {
         ContaPagar conta = contaPagarRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Conta a Pagar com ID " + id + " não encontrada."));
 
@@ -50,7 +50,7 @@ public class ContasPagarService {
 
         conta.setStatus(ContaPagarStatus.PAGA);
         conta.setDataPagamento(LocalDate.now());
-        conta.setFormaPagamento(formaPagamento); // Define a forma de pagamento
+        conta.setFormaPagamento(formaPagamento);
         contaPagarRepository.save(conta);
     }
 }

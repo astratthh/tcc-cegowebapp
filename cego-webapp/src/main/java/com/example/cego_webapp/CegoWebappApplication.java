@@ -18,7 +18,7 @@ public class CegoWebappApplication {
 	@Bean
 	CommandLineRunner commandLineRunner(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
 		return args -> {
-			// Crie um usuário com um login e senha fáceis de lembrar
+			// Crie um usuário com um login e senha
 			if (usuarioRepository.findByUsername("admin").isEmpty()) {
 				Usuario user = new Usuario("admin", passwordEncoder.encode("admin"));
 				usuarioRepository.save(user);

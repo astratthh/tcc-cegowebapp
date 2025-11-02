@@ -44,7 +44,7 @@ public class Usuario implements UserDetails {
     @Override
     public String getUsername() { return this.username; }
 
-    // Deixamos true para indicar que a conta está sempre ativa.
+    // true para indicar que a conta está sempre ativa.
     @Override
     public boolean isAccountNonExpired() { return true; }
 

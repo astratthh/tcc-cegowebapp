@@ -31,7 +31,6 @@ public class ServicoDTO {
 
     public ServicoDTO() {} // construtor vazio
 
-    // NOVO CONSTRUTOR
     public ServicoDTO(Servico servico) {
         this.setNome(servico.getNome());
         this.setDescricao(servico.getDescricao());

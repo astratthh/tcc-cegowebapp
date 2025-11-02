@@ -90,9 +90,6 @@ public class ClienteService {
             throw new EntityNotFoundException("Cliente com ID " + id + " não encontrado.");
         }
 
-        // Removemos o try-catch.
-        // Se houver um erro de integridade, o @Transactional vai falhar
-        // e o Spring vai lançar uma DataIntegrityViolationException.
         clienteRepository.deleteById(id);
     }
 }

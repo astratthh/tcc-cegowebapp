@@ -37,7 +37,6 @@ public class VeiculoController {
     @Autowired
     private PdfService pdfService;
 
-    // Mantemos o ClienteRepository aqui apenas para popular o dropdown do formulário
     @Autowired
     private ClienteRepository clienteRepository;
 
@@ -138,9 +137,8 @@ public class VeiculoController {
     }
 
     @GetMapping("/api/por-cliente/{clienteId}")
-    @ResponseBody // IMPORTANTE: Indica que o retorno é o corpo da resposta, não uma view
+    @ResponseBody
     public List<Veiculo> getVeiculosPorCliente(@PathVariable Integer clienteId) {
-        // Delega a busca para o service
         return veiculoService.listarPorCliente(clienteId);
     }
 

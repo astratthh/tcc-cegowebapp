@@ -39,7 +39,7 @@ public class ContasPagarController {
                         @RequestParam(defaultValue = "0") int page,
                         @RequestParam(defaultValue = "10") int size) {
 
-        Pageable pageable = PageRequest.of(page, size); // A ordenação agora é feita no repositório
+        Pageable pageable = PageRequest.of(page, size);
         ContaPagarStatus statusEnum = null;
         if(status != null && !status.isEmpty()){
             try { statusEnum = ContaPagarStatus.valueOf(status); } catch (Exception e) {}
@@ -67,13 +67,12 @@ public class ContasPagarController {
         return "contas-a-pagar/index";
     }
 
-    // ### CORREÇÃO: MUDADO DE GET PARA POST ###
     @PostMapping("/pagar")
     public String marcarComoPaga(@RequestParam Long id,
-                                 @RequestParam FormaPagamento formaPagamento, // Parâmetro recebido
+                                 @RequestParam FormaPagamento formaPagamento,
                                  RedirectAttributes redirectAttributes) {
         try {
-            contasPagarService.marcarComoPaga(id, formaPagamento); // Passado para o service
+            contasPagarService.marcarComoPaga(id, formaPagamento);
             redirectAttributes.addFlashAttribute("successMessage", "Conta #" + id + " marcada como PAGA!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());

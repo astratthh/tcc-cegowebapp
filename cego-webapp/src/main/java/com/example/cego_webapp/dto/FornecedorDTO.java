@@ -32,7 +32,6 @@ public class FornecedorDTO {
 
     public FornecedorDTO() {} // construtor vazio
 
-    // NOVO CONSTRUTOR
     public FornecedorDTO(Fornecedor fornecedor) {
         this.nome = fornecedor.getNome();
         this.documento = fornecedor.getDocumento();

@@ -1,4 +1,3 @@
-// src/main/java/com/example/cego_webapp/controllers/VendaController.java
 package com.example.cego_webapp.controllers;
 
 import com.example.cego_webapp.dto.VendaDTO;
@@ -6,7 +5,7 @@ import com.example.cego_webapp.models.Venda;
 import com.example.cego_webapp.models.VendaStatus;
 import com.example.cego_webapp.repositories.ClienteRepository;
 import com.example.cego_webapp.repositories.ProdutoRepository;
-import com.example.cego_webapp.services.VendaService; // NOVO IMPORT
+import com.example.cego_webapp.services.VendaService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -91,9 +90,6 @@ public class VendaController {
             model.addAttribute("venda", venda);
             model.addAttribute("clientes", clienteRepository.findAll(Sort.by("nome")));
 
-            // ### CORREÇÃO APLICADA AQUI ###
-            // Renomeie 'produtosJson' para 'produtos'.
-            // A tela espera a lista de produtos para o dropdown e para a lógica JavaScript.
             model.addAttribute("produtos", produtoRepository.findAll(Sort.by("nome")));
 
             return "vendas/edit";

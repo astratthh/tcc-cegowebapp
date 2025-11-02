@@ -74,7 +74,7 @@
                 <div class="form-step">
                     <div class="mb-4">
                         <label for="inputCargo" class="form-label fw-semibold">Cargo</label>
-                        <div class="input-group"><span class="input-group-text bg-light"><i class="bi bi-briefcase"></i></span><input type="text" class="form-control" th:field="*{cargo}" placeholder="Ex: Vendedor, Técnico" th:classappend="${#fields.hasErrors('cargo')} ? 'is-invalid'" id="inputCargo"></div>
+                        <div class="input-group"><span class="input-group-text bg-light"><i class="bi bi-briefcase"></i></span><input type="text" class="form-control" th:field="*{cargo}" placeholder="Ex: Lavador, Auxiliar" th:classappend="${#fields.hasErrors('cargo')} ? 'is-invalid'" id="inputCargo"></div>
                         <p class="text-danger small mt-1" th:if="${#fields.hasErrors('cargo')}" th:errors="*{cargo}"></p>
                     </div>
                     <div class="mb-4">

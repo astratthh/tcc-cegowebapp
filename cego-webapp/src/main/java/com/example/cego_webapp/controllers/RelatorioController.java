@@ -26,20 +26,17 @@ public class RelatorioController {
     @Autowired
     private PdfService pdfService;
 
-    // Mostra a página de filtro
     @GetMapping("/faturamento")
     public String formFaturamento(Model model) {
         model.addAttribute("activePage", "relatorios"); // Para marcar no sidebar
         return "relatorios/faturamento-filtro";
     }
 
-    // Gera o PDF
     @GetMapping("/faturamento/pdf")
     public void gerarRelatorioFaturamento(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
                                           @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fim,
                                           HttpServletResponse response, RedirectAttributes redirectAttributes) throws IOException { // Adicionado RedirectAttributes
 
-        // Define datas padrão se não forem fornecidas (Ex: mês atual)
         if (inicio == null) {
             inicio = LocalDate.now().withDayOfMonth(1);
         }
@@ -59,10 +56,6 @@ public class RelatorioController {
             response.getOutputStream().write(pdfBytes);
 
         } catch (Exception e) {
-            // Em caso de erro, redireciona de volta para a tela de filtro com uma mensagem
-            // Não podemos usar RedirectAttributes diretamente aqui, pois o método é void.
-            // A melhor abordagem seria retornar um erro HTTP ou redirecionar via JavaScript se necessário.
-            // Por simplicidade, vamos apenas logar o erro no console.
             System.err.println("Erro ao gerar relatório de faturamento: " + e.getMessage());
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Erro ao gerar o relatório PDF.");
         }

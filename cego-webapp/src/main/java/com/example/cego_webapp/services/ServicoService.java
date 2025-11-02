@@ -65,7 +65,6 @@ public class ServicoService {
         if (!servicoRepository.existsById(id)) {
             throw new EntityNotFoundException("Serviço não encontrado.");
         }
-        // try-catch removido
         servicoRepository.deleteById(id);
     }
 }

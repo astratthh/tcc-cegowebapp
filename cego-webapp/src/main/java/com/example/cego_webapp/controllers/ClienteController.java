@@ -36,7 +36,6 @@ public class ClienteController {
     @Autowired
     private PdfService pdfService;
 
-    // ... (get, create e post create continuam iguais) ...
     @GetMapping({"", "/"})
     public String getClientes(Model model, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size, @RequestParam(defaultValue = "id,desc") String sort, @RequestParam(required = false) String keyword) {
         String[] sortParams = sort.split(",");
@@ -81,7 +80,6 @@ public class ClienteController {
     }
 
 
-    // ### MÉTODO CORRIGIDO ###
     @GetMapping("/edit")
     public String editClienteForm(@RequestParam Integer id, Model model, RedirectAttributes redirectAttributes) {
         try {
@@ -90,7 +88,6 @@ public class ClienteController {
                 model.addAttribute("clienteDTO", new ClienteDTO(cliente));
             }
 
-            // CORREÇÃO: Enviar o objeto 'cliente' inteiro para a view
             model.addAttribute("cliente", cliente);
 
             model.addAttribute("activePage", "clientes");
@@ -101,7 +98,6 @@ public class ClienteController {
         }
     }
 
-    // ... (post edit e delete continuam iguais) ...
     @PostMapping("/edit")
     public String editCliente(@RequestParam Integer id, @Valid @ModelAttribute("clienteDTO") ClienteDTO clienteDTO, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
@@ -130,11 +126,8 @@ public class ClienteController {
             clienteService.deletarCliente(id);
             redirectAttributes.addFlashAttribute("successMessage", "Cliente excluído com sucesso!");
         } catch (DataIntegrityViolationException e) {
-            // ### A "TRADUÇÃO" DO ERRO ACONTECE AQUI ###
-            // Capturamos o erro específico do banco de dados e criamos uma mensagem amigável.
             redirectAttributes.addFlashAttribute("errorMessage", "Não é possível excluir este cliente, pois ele está associado a Vendas, Veículos ou Ordens de Serviço.");
         } catch (Exception e) {
-            // Captura qualquer outro erro (como "Não encontrado")
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
         return "redirect:/clientes";
@@ -143,10 +136,8 @@ public class ClienteController {
     @GetMapping("/relatorio/pdf")
     public void gerarRelatorioPdf(@RequestParam(required = false) String keyword, HttpServletResponse response) throws IOException {
 
-        // CORREÇÃO: Chamar o novo método que retorna a lista COMPLETA
         List<Cliente> clientes = clienteService.listarTodosParaRelatorio(keyword);
 
-        // O resto do método permanece o mesmo
         Map<String, Object> variaveis = new HashMap<>();
         variaveis.put("clientes", clientes);
         variaveis.put("dataGeracao", LocalDateTime.now());

@@ -78,7 +78,7 @@
         <div class="form-step active">
           <div class="mb-4">
             <label for="inputNome" class="form-label fw-semibold">Nome do Produto</label>
-            <div class="input-group"><span class="input-group-text bg-light"><i class="bi bi-box2"></i></span><input type="text" class="form-control" th:field="*{nome}" placeholder="Ex: Teclado Mecânico RGB" th:classappend="${#fields.hasErrors('nome')} ? 'is-invalid'" id="inputNome"></div>
+            <div class="input-group"><span class="input-group-text bg-light"><i class="bi bi-box2"></i></span><input type="text" class="form-control" th:field="*{nome}" placeholder="Ex: Cera Limpadora, Shampoo Automotivo" th:classappend="${#fields.hasErrors('nome')} ? 'is-invalid'" id="inputNome"></div>
             <p class="text-danger small mt-1" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}"></p>
           </div>
           <div class="mb-4">

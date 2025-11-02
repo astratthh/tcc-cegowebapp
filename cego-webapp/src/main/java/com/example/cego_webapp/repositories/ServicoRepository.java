@@ -15,10 +15,8 @@ import java.util.List;
 @Repository
 public interface ServicoRepository extends JpaRepository<Servico, Integer> {
 
-    // Método para a paginação (já existe)
     Page<Servico> findByNomeContainingIgnoreCase(String keyword, Pageable pageable);
 
-    // ### NOVO MÉTODO PARA O RELATÓRIO ###
     // Retorna uma LISTA completa (não paginada) de serviços que correspondem à busca.
     List<Servico> findAllByNomeContainingIgnoreCase(String nome);
 

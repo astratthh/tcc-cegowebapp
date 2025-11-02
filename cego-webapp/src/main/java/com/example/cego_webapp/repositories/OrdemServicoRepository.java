@@ -16,8 +16,6 @@ public interface OrdemServicoRepository extends JpaRepository<OrdemServico, Inte
 
     @Query("SELECT os FROM OrdemServico os WHERE " +
             "(:clienteId IS NULL OR os.cliente.id = :clienteId) AND " +
-            // ### CORREÇÃO APLICADA AQUI ###
-            // Em vez de "MEMBER OF", usamos uma sub-consulta para verificar o ID do funcionário na coleção
             "(:funcionarioId IS NULL OR EXISTS (SELECT f FROM os.funcionarios f WHERE f.id = :funcionarioId)) AND " +
             "(:status IS NULL OR os.status = :status) AND " +
             "(CAST(:dataInicio AS date) IS NULL OR os.dataEntrada >= :dataInicio) AND " +

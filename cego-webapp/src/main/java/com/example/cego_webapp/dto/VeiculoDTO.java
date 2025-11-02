@@ -27,7 +27,6 @@ public class VeiculoDTO {
 
     public VeiculoDTO() {} // construtor vazio
 
-    // NOVO CONSTRUTOR
     public VeiculoDTO(Veiculo veiculo) {
         this.setPlaca(veiculo.getPlaca());
         this.setMarca(veiculo.getMarca());

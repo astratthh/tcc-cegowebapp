@@ -16,10 +16,6 @@ import java.util.Optional;
 
 public interface ContaPagarRepository extends JpaRepository<ContaPagar, Long> {
 
-    /**
-     * Método principal de busca que unifica filtros e a ordenação customizada.
-     * Ordena por status (A_PAGAR primeiro) e depois por data de vencimento.
-     */
     @Query("SELECT cp FROM ContaPagar cp JOIN cp.compra c JOIN c.fornecedor f " +
             "WHERE (:status IS NULL OR cp.status = :status) " +
             "AND (:fornecedorId IS NULL OR f.id = :fornecedorId) " +
@@ -39,7 +35,7 @@ public interface ContaPagarRepository extends JpaRepository<ContaPagar, Long> {
                                    @Param("dataFim") LocalDate dataFim,
                                    Pageable pageable);
 
-    // --- Métodos para o Dashboard (já estavam corretos) ---
+    // --- Métodos para o Dashboard
     @Query("SELECT SUM(c.valor) FROM ContaPagar c WHERE c.status = 'A_PAGAR'")
     Optional<BigDecimal> findTotalAPagar();
 

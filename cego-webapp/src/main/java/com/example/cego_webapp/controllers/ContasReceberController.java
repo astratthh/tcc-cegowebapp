@@ -29,7 +29,6 @@ public class ContasReceberController {
     @Autowired
     private ContaReceberService contaReceberService;
 
-    // Repositórios injetados apenas para o dashboard e para popular filtros
     @Autowired
     private ContaReceberRepository contaReceberRepository;
     @Autowired
@@ -52,10 +51,8 @@ public class ContasReceberController {
             try { statusEnum = ContaReceberStatus.valueOf(status); } catch (Exception e) {}
         }
 
-        // Agora o service lida com a busca e ordenação
         Page<ContaReceber> contasPage = contaReceberService.listarContas(keyword, statusEnum, clienteId, dataInicio, dataFim, origem, pageable);
 
-        // A lógica do dashboard agora funciona corretamente com o .orElse()
         model.addAttribute("totalPendente", contaReceberRepository.findTotalPendente().orElse(BigDecimal.ZERO));
         model.addAttribute("totalAtrasado", contaReceberRepository.findTotalAtrasado().orElse(BigDecimal.ZERO));
         model.addAttribute("totalRecebidoMes", contaReceberRepository.findTotalRecebidoNoMes(LocalDate.now().withDayOfMonth(1)).orElse(BigDecimal.ZERO));
@@ -65,7 +62,6 @@ public class ContasReceberController {
         model.addAttribute("totalPages", contasPage.getTotalPages());
         model.addAttribute("clientes", clienteRepository.findAll(Sort.by("nome")));
 
-        // Mantém os filtros na tela
         model.addAttribute("paramKeyword", keyword);
         model.addAttribute("paramClienteId", clienteId);
         model.addAttribute("paramDataInicio", dataInicio);
@@ -80,10 +76,10 @@ public class ContasReceberController {
 
     @PostMapping("/pagar")
     public String marcarComoPaga(@RequestParam Long id,
-                                 @RequestParam FormaPagamento formaPagamento, // Parâmetro recebido
+                                 @RequestParam FormaPagamento formaPagamento,
                                  RedirectAttributes redirectAttributes) {
         try {
-            contaReceberService.marcarComoPaga(id, formaPagamento); // Passado para o service
+            contaReceberService.marcarComoPaga(id, formaPagamento);
             redirectAttributes.addFlashAttribute("successMessage", "Conta #" + id + " marcada como recebida com sucesso!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());

@@ -23,8 +23,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // ### CORREÇÃO AQUI ###
-                // Desabilitamos a proteção CSRF apenas para os endpoints da nossa API
+
                 .csrf(csrf -> csrf
                         .ignoringRequestMatchers("/ordens-servico/api/**")
                 )

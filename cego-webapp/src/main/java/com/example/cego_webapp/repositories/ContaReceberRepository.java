@@ -51,8 +51,7 @@ public interface ContaReceberRepository extends JpaRepository<ContaReceber, Long
     // Método utilitário para o Service
     Optional<ContaReceber> findByOrdemServico(OrdemServico ordemServico);
 
-    // --- Métodos para o Dashboard (CORRIGIDOS) ---
-    // O tipo de retorno agora é Optional<BigDecimal> para tratar com segurança os casos onde a soma é nula.
+    // --- Métodos para o Dashboard ---
     @Query("SELECT SUM(c.valor) FROM ContaReceber c WHERE c.status = 'PENDENTE'")
     Optional<BigDecimal> findTotalPendente();
 

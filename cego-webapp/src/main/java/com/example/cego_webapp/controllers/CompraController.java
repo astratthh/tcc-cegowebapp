@@ -82,15 +82,12 @@ public class CompraController {
                 return "redirect:/compras";
             }
 
-            // Cria o DTO a partir da entidade para popular o formulário
             if (!model.containsAttribute("compraDTO")) {
                 model.addAttribute("compraDTO", new CompraDTO(compra));
             }
 
-            // Envia o objeto 'compra' para a tela (para usar o ID no título)
             model.addAttribute("compra", compra);
 
-            // Envia as listas completas para os dropdowns e para o JavaScript
             model.addAttribute("fornecedores", fornecedorRepository.findAll(Sort.by("nome")));
             model.addAttribute("produtos", produtoRepository.findAll(Sort.by("nome")));
 

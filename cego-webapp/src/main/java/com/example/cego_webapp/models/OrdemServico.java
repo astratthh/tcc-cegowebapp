@@ -37,7 +37,7 @@ public class OrdemServico {
     private String observacoes; // Observações do cliente/serviço
 
     @Column(columnDefinition = "TEXT")
-    private String observacoesInternas; // Para o histórico simples que sugerimos
+    private String observacoesInternas;
 
     @Column(nullable = false)
     private BigDecimal valorTotal = BigDecimal.ZERO;

@@ -106,7 +106,6 @@ public class VendaService {
         for (var itemDTO : vendaDTO.getItens()) {
             Produto produto = produtoRepository.findById(itemDTO.getProdutoId()).orElseThrow();
             if (produto.getEstoque() < itemDTO.getQuantidade()) {
-                // Se der erro aqui, o @Transactional desfaz o estorno do passo 1, mantendo a consistência.
                 throw new IllegalStateException("Estoque insuficiente para '" + produto.getNome() + "'. A edição foi cancelada.");
             }
             produto.setEstoque(produto.getEstoque() - itemDTO.getQuantidade());
@@ -115,7 +114,7 @@ public class VendaService {
             novoTotalVenda = novoTotalVenda.add(novoItem.getSubtotal());
         }
 
-        // 3. Atualiza os dados da venda e da conta a receber
+        // Atualiza os dados da venda e da conta a receber
         venda.setCliente(cliente);
         venda.setValorTotal(novoTotalVenda);
         if (venda.getContaReceber() != null) {

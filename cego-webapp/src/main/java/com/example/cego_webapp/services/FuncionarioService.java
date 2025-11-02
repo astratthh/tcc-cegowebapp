@@ -27,7 +27,6 @@ public class FuncionarioService {
         }
     }
 
-    // ### NOVO MÉTODO ADICIONADO PARA O RELATÓRIO ###
     public List<Funcionario> listarTodosParaRelatorio(String keyword) {
         if (keyword != null && !keyword.isEmpty()) {
             return funcionarioRepository.findAllByNomeContainingIgnoreCase(keyword);
@@ -81,7 +80,6 @@ public class FuncionarioService {
         if (!funcionarioRepository.existsById(id)) {
             throw new EntityNotFoundException("Funcionário não encontrado.");
         }
-        // try-catch removido
         funcionarioRepository.deleteById(id);
     }
 }

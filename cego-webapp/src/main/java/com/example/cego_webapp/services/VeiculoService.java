@@ -26,7 +26,6 @@ public class VeiculoService {
     @Autowired
     private ClienteRepository clienteRepository;
 
-    // A lógica de validação da placa agora pertence ao serviço
     private static final String PLATE_REGEX = "^[A-Z]{3}[0-9]{4}$|^[A-Z]{3}[0-9][A-Z][0-9]{2}$";
     private static final Pattern PLATE_PATTERN = Pattern.compile(PLATE_REGEX);
 
@@ -110,7 +109,6 @@ public class VeiculoService {
     }
 
     public List<Veiculo> listarPorCliente(Integer clienteId) {
-        // Precisamos injetar o VeiculoRepository para este método funcionar
         return veiculoRepository.findByClienteId(clienteId);
     }
 
@@ -119,7 +117,6 @@ public class VeiculoService {
         if (!veiculoRepository.existsById(id)) {
             throw new EntityNotFoundException("Veículo não encontrado.");
         }
-        // try-catch removido
         veiculoRepository.deleteById(id);
     }
 }

@@ -39,7 +39,6 @@ public class FuncionarioDTO {
 
     public FuncionarioDTO() {} // construtor vazio
 
-    // NOVO CONSTRUTOR
     public FuncionarioDTO(Funcionario funcionario) {
         this.nome = funcionario.getNome();
         this.documento = funcionario.getDocumento();

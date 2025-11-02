@@ -37,7 +37,6 @@ public class FornecedorController {
     @Autowired
     private PdfService pdfService;
 
-    // ... (getFornecedores, createFornecedorForm, createFornecedor continuam iguais) ...
     @GetMapping({"", "/"})
     public String getFornecedores(Model model, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size, @RequestParam(defaultValue = "id,desc") String sort, @RequestParam(required = false) String keyword) {
         String[] sortParams = sort.split(",");
@@ -80,7 +79,6 @@ public class FornecedorController {
     }
 
 
-    // ### MÉTODO CORRIGIDO ###
     @GetMapping("/edit")
     public String editFornecedorForm(@RequestParam Integer id, Model model, RedirectAttributes redirectAttributes) {
         try {
@@ -89,10 +87,8 @@ public class FornecedorController {
                 model.addAttribute("fornecedorDTO", new FornecedorDTO(fornecedor));
             }
 
-            // CORREÇÃO 1: Enviar o objeto inteiro com o nome "fornecedor"
             model.addAttribute("fornecedor", fornecedor);
 
-            // CORREÇÃO 2: Ajustar o nome da página ativa
             model.addAttribute("activePage", "fornecedores");
 
             return "fornecedores/edit";
@@ -140,19 +136,15 @@ public class FornecedorController {
 
     @GetMapping("/relatorio/pdf")
     public void gerarRelatorioPdf(@RequestParam(required = false) String keyword, HttpServletResponse response) throws IOException {
-        // Busca a lista completa de fornecedores
         List<Fornecedor> fornecedores = fornecedorService.listarTodosParaRelatorio(keyword);
 
-        // Prepara as variáveis para o template
         Map<String, Object> variaveis = new HashMap<>();
         variaveis.put("fornecedores", fornecedores);
         variaveis.put("dataGeracao", LocalDateTime.now());
         variaveis.put("totalFornecedores", fornecedores.size());
 
-        // Gera o PDF
         byte[] pdfBytes = pdfService.gerarPdfDeHtml("fornecedor-relatorio.html", variaveis);
 
-        // Envia o PDF para o navegador
         response.setContentType("application/pdf");
         response.setHeader("Content-Disposition", "attachment; filename=relatorio_fornecedores.pdf");
         response.getOutputStream().write(pdfBytes);

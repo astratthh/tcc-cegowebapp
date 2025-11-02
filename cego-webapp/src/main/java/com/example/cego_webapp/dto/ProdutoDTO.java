@@ -33,7 +33,6 @@ public class ProdutoDTO {
 
     public ProdutoDTO() {} // construtor vazio
 
-    // NOVO CONSTRUTOR
     public ProdutoDTO(Produto produto) {
         this.setNome(produto.getNome());
         this.setDescricao(produto.getDescricao());

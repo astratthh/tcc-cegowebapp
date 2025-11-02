@@ -4,7 +4,7 @@ package com.example.cego_webapp.controllers;
 import com.example.cego_webapp.dto.ServicoDTO;
 import com.example.cego_webapp.models.Servico;
 import com.example.cego_webapp.services.PdfService;
-import com.example.cego_webapp.services.ServicoService; // NOVO IMPORT
+import com.example.cego_webapp.services.ServicoService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -88,7 +88,6 @@ public class ServicoController {
         try {
             Servico servico = servicoService.buscarPorId(id);
             if (!model.containsAttribute("servicoDTO")) {
-                // Adicione este construtor ao seu ServicoDTO
                 model.addAttribute("servicoDTO", new ServicoDTO(servico));
             }
             model.addAttribute("servico", servico);

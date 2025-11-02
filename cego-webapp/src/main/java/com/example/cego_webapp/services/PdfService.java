@@ -32,7 +32,6 @@ public class PdfService {
             return outputStream.toByteArray();
         } catch (Exception e) {
             e.printStackTrace(); // Loga o erro para debug
-            // Você pode lançar uma exceção customizada aqui se preferir
             throw new RuntimeException("Erro ao gerar o relatório PDF.", e);
         }
     }

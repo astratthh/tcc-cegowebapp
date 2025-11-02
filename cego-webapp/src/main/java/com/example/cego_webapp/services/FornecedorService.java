@@ -84,7 +84,6 @@ public class FornecedorService {
         if (!fornecedorRepository.existsById(id)) {
             throw new EntityNotFoundException("Fornecedor não encontrado.");
         }
-        // try-catch removido
         fornecedorRepository.deleteById(id);
     }
 }

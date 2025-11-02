@@ -23,30 +23,17 @@ public class ContaReceberService {
     @Autowired
     private VendaRepository vendaRepository;
 
-    /**
-     * Lista e filtra as contas a receber usando a query customizada
-     * que também aplica a ordenação de "Pendentes primeiro".
-     */
     public Page<ContaReceber> listarContas(String keyword, ContaReceberStatus status, Integer clienteId,
                                            LocalDate dataInicio, LocalDate dataFim, String origem,
                                            Pageable pageable) {
-        // Chama o novo método unificado do repositório
         return contaReceberRepository.searchAndSort(keyword, status, clienteId, dataInicio, dataFim, origem, pageable);
     }
 
-    /**
-     * Busca uma única conta a receber pelo seu ID.
-     * Lança uma exceção se não for encontrada.
-     */
     public ContaReceber buscarPorId(Long id) {
         return contaReceberRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Conta a Receber com ID " + id + " não encontrada."));
     }
 
-    /**
-     * Altera o status de uma conta para "RECEBIDA" e define a data de recebimento.
-     * A operação é transacional.
-     */
     @Transactional
     public void marcarComoPaga(Long id, FormaPagamento formaPagamento) {
         ContaReceber conta = buscarPorId(id);
@@ -61,8 +48,6 @@ public class ContaReceberService {
         conta.setStatus(ContaReceberStatus.RECEBIDA);
         conta.setDataRecebimento(LocalDate.now());
         conta.setFormaPagamento(formaPagamento);
-
-        // ### LÓGICA DE SINCRONIZAÇÃO ADICIONADA ###
 
         // 2. Verifica se a conta veio de uma Venda
         if (conta.getVenda() != null) {
